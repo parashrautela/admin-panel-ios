@@ -1,0 +1,32 @@
+name: AdminPanel
+options:
+  bundleIdPrefix: com.jewelindia
+  minimumXcodeGenVersion: 2.0.0
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift.git
+    from: 2.0.0
+targets:
+  AdminPanel:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    configFiles:
+      Debug: Config.xcconfig
+      Release: Config.xcconfig
+    sources:
+      - path: AdminPanel/Sources
+      - path: AdminPanel/Resources
+    dependencies:
+      - package: Supabase
+    info:
+      path: AdminPanel/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations: {}
+        SUPABASE_URL: $(SUPABASE_URL)
+        SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
+        SUPABASE_SERVICE_ROLE_KEY: $(SUPABASE_SERVICE_ROLE_KEY)
+        ADMIN_PASSWORD: $(ADMIN_PASSWORD)

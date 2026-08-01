@@ -1,0 +1,433 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1F66C009F586CCE2070D2A29 /* AdminLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2F7473775230E72B474B2 /* AdminLoginView.swift */; };
+		680D04F6E162F3F5D50F079F /* LiquidBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF498E50B0D3C01407F084E /* LiquidBackground.swift */; };
+		6B9C2FE14C423D2D7441F135 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = D9B1DEF00A8379E2A0E80E4E /* Supabase */; };
+		6D9A1FA4AB077A7341BCF820 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102D52FEC40F3E704CA619E9 /* RootView.swift */; };
+		72CE3BE9A7B27FB16D08A289 /* AdminAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A616E2187E69AFAF693EDC /* AdminAuth.swift */; };
+		89C7D89D441EECED07CDA8A8 /* AdminAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43777DE0355DDC688EC882D /* AdminAPI.swift */; };
+		A5776C3E26CEB35CB84AB778 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C242384DABA76578459F577 /* ToastCenter.swift */; };
+		A9AF810E5496E52A1E9888F3 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0816DA827B297FC5BDA114C4 /* Models.swift */; };
+		B2829EA5DDE9B8232D83655C /* AdminPanelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90D13C80E1F6CD1132EB1B /* AdminPanelApp.swift */; };
+		BA1B0BEDAE1CA2E1931BF5D7 /* WholesalerReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C596BA377BA84A35DA13F67 /* WholesalerReviewView.swift */; };
+		C74621E6500F9EB7C59FA247 /* AdminDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE5A329C84B6AE712F1042B /* AdminDashboardView.swift */; };
+		D75A78B9BD9DAA0D0A733E78 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25F76472DAB88A4517A1A459 /* Theme.swift */; };
+		DF6C7EAEC72ABFF1B413D2D2 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C0F5F7BDB0435BA54865CAC /* SupabaseClient.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0816DA827B297FC5BDA114C4 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		102D52FEC40F3E704CA619E9 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		11395B13DDB76FAE73E646EB /* .keep */ = {isa = PBXFileReference; path = .keep; sourceTree = "<group>"; };
+		25F76472DAB88A4517A1A459 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		3C596BA377BA84A35DA13F67 /* WholesalerReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WholesalerReviewView.swift; sourceTree = "<group>"; };
+		3E90D13C80E1F6CD1132EB1B /* AdminPanelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelApp.swift; sourceTree = "<group>"; };
+		3FF498E50B0D3C01407F084E /* LiquidBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidBackground.swift; sourceTree = "<group>"; };
+		7C242384DABA76578459F577 /* ToastCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCenter.swift; sourceTree = "<group>"; };
+		8692399AF29E777B99D21184 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		89A616E2187E69AFAF693EDC /* AdminAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAuth.swift; sourceTree = "<group>"; };
+		9C0F5F7BDB0435BA54865CAC /* SupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClient.swift; sourceTree = "<group>"; };
+		ADED9120A9750EBF3322D112 /* AdminPanel.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AdminPanel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DBE2F7473775230E72B474B2 /* AdminLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminLoginView.swift; sourceTree = "<group>"; };
+		EEE5A329C84B6AE712F1042B /* AdminDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminDashboardView.swift; sourceTree = "<group>"; };
+		F43777DE0355DDC688EC882D /* AdminAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAPI.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1FB8F28BBEBD50066A3EAF5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B9C2FE14C423D2D7441F135 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1736B3EBB5A8453D80D04D8B /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				C60CD8BB841420885E81B87B /* Dashboard */,
+				712B7544CEB407CEF99461B8 /* Login */,
+				D02E3AB3514FA61CF77F4A97 /* Review */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		5611B4583D0FAD6FD447B68A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				11395B13DDB76FAE73E646EB /* .keep */,
+			);
+			name = Resources;
+			path = AdminPanel/Resources;
+			sourceTree = "<group>";
+		};
+		6058B5D99EEBF74ED1FD8C16 /* admin panel ios */ = {
+			isa = PBXGroup;
+			children = (
+				8692399AF29E777B99D21184 /* Config.xcconfig */,
+			);
+			name = "admin panel ios";
+			path = .;
+			sourceTree = "<group>";
+		};
+		712B7544CEB407CEF99461B8 /* Login */ = {
+			isa = PBXGroup;
+			children = (
+				DBE2F7473775230E72B474B2 /* AdminLoginView.swift */,
+			);
+			path = Login;
+			sourceTree = "<group>";
+		};
+		77141667D074246E88EB9FDC = {
+			isa = PBXGroup;
+			children = (
+				6058B5D99EEBF74ED1FD8C16 /* admin panel ios */,
+				5611B4583D0FAD6FD447B68A /* Resources */,
+				A3CC58DAC7CA4C499331976E /* Sources */,
+				CA41275F1F097A8C9389191C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A3CC58DAC7CA4C499331976E /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				3E90D13C80E1F6CD1132EB1B /* AdminPanelApp.swift */,
+				9C0F5F7BDB0435BA54865CAC /* SupabaseClient.swift */,
+				B30481701FA541CE9497BC0A /* Core */,
+				1736B3EBB5A8453D80D04D8B /* Features */,
+				CA40FAFE0DA9833A021340CD /* Navigation */,
+			);
+			name = Sources;
+			path = AdminPanel/Sources;
+			sourceTree = "<group>";
+		};
+		B30481701FA541CE9497BC0A /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				F43777DE0355DDC688EC882D /* AdminAPI.swift */,
+				89A616E2187E69AFAF693EDC /* AdminAuth.swift */,
+				3FF498E50B0D3C01407F084E /* LiquidBackground.swift */,
+				0816DA827B297FC5BDA114C4 /* Models.swift */,
+				25F76472DAB88A4517A1A459 /* Theme.swift */,
+				7C242384DABA76578459F577 /* ToastCenter.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		C60CD8BB841420885E81B87B /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				EEE5A329C84B6AE712F1042B /* AdminDashboardView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		CA40FAFE0DA9833A021340CD /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				102D52FEC40F3E704CA619E9 /* RootView.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		CA41275F1F097A8C9389191C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ADED9120A9750EBF3322D112 /* AdminPanel.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D02E3AB3514FA61CF77F4A97 /* Review */ = {
+			isa = PBXGroup;
+			children = (
+				3C596BA377BA84A35DA13F67 /* WholesalerReviewView.swift */,
+			);
+			path = Review;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		414DA010E53A77AC3868DE4A /* AdminPanel */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 147A6DED6903D41B6DC25038 /* Build configuration list for PBXNativeTarget "AdminPanel" */;
+			buildPhases = (
+				EBC2AD08D744E09B0611B4AA /* Sources */,
+				1FB8F28BBEBD50066A3EAF5C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AdminPanel;
+			packageProductDependencies = (
+				D9B1DEF00A8379E2A0E80E4E /* Supabase */,
+			);
+			productName = AdminPanel;
+			productReference = ADED9120A9750EBF3322D112 /* AdminPanel.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4A50B796B589867AE2008FF2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 6D089DCE3BD466DDE95FA5ED /* Build configuration list for PBXProject "AdminPanel" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 77141667D074246E88EB9FDC;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B86B087E66E41BA1E27CCC4E /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CA41275F1F097A8C9389191C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				414DA010E53A77AC3868DE4A /* AdminPanel */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		EBC2AD08D744E09B0611B4AA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				89C7D89D441EECED07CDA8A8 /* AdminAPI.swift in Sources */,
+				72CE3BE9A7B27FB16D08A289 /* AdminAuth.swift in Sources */,
+				C74621E6500F9EB7C59FA247 /* AdminDashboardView.swift in Sources */,
+				1F66C009F586CCE2070D2A29 /* AdminLoginView.swift in Sources */,
+				B2829EA5DDE9B8232D83655C /* AdminPanelApp.swift in Sources */,
+				680D04F6E162F3F5D50F079F /* LiquidBackground.swift in Sources */,
+				A9AF810E5496E52A1E9888F3 /* Models.swift in Sources */,
+				6D9A1FA4AB077A7341BCF820 /* RootView.swift in Sources */,
+				DF6C7EAEC72ABFF1B413D2D2 /* SupabaseClient.swift in Sources */,
+				D75A78B9BD9DAA0D0A733E78 /* Theme.swift in Sources */,
+				A5776C3E26CEB35CB84AB778 /* ToastCenter.swift in Sources */,
+				BA1B0BEDAE1CA2E1931BF5D7 /* WholesalerReviewView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6E4B0B7975E12EB207E10865 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		879B02CFA388ABE9B36A8B28 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8692399AF29E777B99D21184 /* Config.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = AdminPanel/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanel;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9EE3A80DF11B36063FD579FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8692399AF29E777B99D21184 /* Config.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = AdminPanel/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanel;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E289FD3854D6B2FD51591937 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		147A6DED6903D41B6DC25038 /* Build configuration list for PBXNativeTarget "AdminPanel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				879B02CFA388ABE9B36A8B28 /* Debug */,
+				9EE3A80DF11B36063FD579FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6D089DCE3BD466DDE95FA5ED /* Build configuration list for PBXProject "AdminPanel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E289FD3854D6B2FD51591937 /* Debug */,
+				6E4B0B7975E12EB207E10865 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B86B087E66E41BA1E27CCC4E /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D9B1DEF00A8379E2A0E80E4E /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B86B087E66E41BA1E27CCC4E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 4A50B796B589867AE2008FF2 /* Project object */;
+}
