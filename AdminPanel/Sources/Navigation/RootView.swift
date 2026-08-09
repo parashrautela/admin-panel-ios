@@ -26,6 +26,11 @@ struct RootView: View {
             }
         }
         .animation(.easeOut(duration: 0.2), value: toast.toast)
+        // This UI has no dark variant — Liquid Glass/system Materials adapt to
+        // the device's appearance on their own, while Theme.swift's colors are
+        // static, so system Dark Mode splits the app into dark cards next to
+        // unchanged light text/badges. Pin to light so everything matches.
+        .preferredColorScheme(.light)
     }
 }
 
