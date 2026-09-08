@@ -1,20 +1,24 @@
 import Foundation
-import Supabase
 
-// Mirrors the web app's client setup (src/lib/supabase.ts): prefers the
-// service-role key when configured, otherwise falls back to the anon key.
-let supabase: SupabaseClient = {
-    guard let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
-          urlString.hasPrefix("http"),
-          let url = URL(string: urlString) else {
-        fatalError("SUPABASE_URL not found in Info.plist or is invalid.")
+enum AppConfiguration {
+    static var environment: String {
+        let value = Bundle.main.object(forInfoDictionaryKey: "ADMIN_ENVIRONMENT") as? String
+        return value?.nonblank.flatMap { $0.contains("$(") ? nil : $0 } ?? "Environment not set"
     }
-
-    let serviceKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_SERVICE_ROLE_KEY") as? String
-    let anonKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String
-    guard let key = [serviceKey, anonKey].compactMap({ $0 }).first(where: { !$0.isEmpty }) else {
-        fatalError("No Supabase key found in Info.plist.")
+    static var preview: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("--preview-data")
+        #else
+        return false
+        #endif
     }
-
-    return SupabaseClient(supabaseURL: url, supabaseKey: key)
-}()
+    static func connection() throws -> (URL, String) {
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
+              let url = URL(string: raw), url.scheme == "https",
+              let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String,
+              !key.isEmpty, !key.contains("$(") else {
+            throw AdminAPIError(code: "configuration", message: "The server connection is not configured. Check the build configuration with your administrator.")
+        }
+        return (url, key)
+    }
+}

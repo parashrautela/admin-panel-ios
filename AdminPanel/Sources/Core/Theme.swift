@@ -1,54 +1,67 @@
 import SwiftUI
 
-// Tailwind palette used by the web admin panel, mapped 1:1 so screens match.
-extension Color {
-    init(hex: UInt32) {
-        self.init(
-            .sRGB,
-            red: Double((hex >> 16) & 0xFF) / 255,
-            green: Double((hex >> 8) & 0xFF) / 255,
-            blue: Double(hex & 0xFF) / 255,
-            opacity: 1
-        )
-    }
-
-    static let gray50 = Color(hex: 0xF9FAFB)
-    static let gray100 = Color(hex: 0xF3F4F6)
-    static let gray200 = Color(hex: 0xE5E7EB)
-    static let gray300 = Color(hex: 0xD1D5DB)
-    static let gray400 = Color(hex: 0x9CA3AF)
-    static let gray500 = Color(hex: 0x6B7280)
-    static let gray600 = Color(hex: 0x4B5563)
-    static let gray700 = Color(hex: 0x374151)
-    static let gray900 = Color(hex: 0x111827)
-
-    static let blue100 = Color(hex: 0xDBEAFE)
-    static let blue600 = Color(hex: 0x2563EB)
-    static let blue700 = Color(hex: 0x1D4ED8)
-    static let blue900 = Color(hex: 0x1E3A8A)
-
-    static let yellow100 = Color(hex: 0xFEF9C3)
-    static let yellow900 = Color(hex: 0x713F12)
-
-    static let red100 = Color(hex: 0xFEE2E2)
-    static let red500 = Color(hex: 0xEF4444)
-    static let red900 = Color(hex: 0x7F1D1D)
+enum AdminTheme {
+    static let accent = Color.indigo
+    static let surface = Color(uiColor: .secondarySystemGroupedBackground)
+    static let background = Color(uiColor: .systemGroupedBackground)
 }
-
-// Card container matching the web's `rounded-lg shadow-sm border border-gray-100`.
-struct WebCard: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray100, lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+extension WholesalerStatus {
+    var tint: Color {
+        switch self {
+        case .pending: return .orange
+        case .on_hold: return .purple
+        case .verified: return .green
+        case .resubmission_required: return .blue
+        case .rejected, .banned: return .red
+        case .unknown: return .secondary
+        }
     }
 }
-
-extension View {
-    func webCard() -> some View { modifier(WebCard()) }
+struct StatusBadge: View {
+    var status: WholesalerStatus
+    var body: some View {
+        Label(status.label, systemImage: status.symbol)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(status.tint)
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(status.tint.opacity(0.12), in: Capsule())
+            .accessibilityLabel("Status: " + status.label)
+    }
+}
+struct Panel<Content: View>: View {
+    var title: String
+    var symbol: String
+    @ViewBuilder var content: Content
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label(title, systemImage: symbol).font(.headline).accessibilityAddTraits(.isHeader)
+            content
+        }
+        .padding(20).frame(maxWidth: .infinity, alignment: .leading)
+        .background(AdminTheme.surface, in: RoundedRectangle(cornerRadius: 20))
+    }
+}
+struct ErrorPanel: View {
+    let error: AdminAPIError
+    var retry: (() -> Void)?
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label(error.title, systemImage: "exclamationmark.triangle.fill").font(.headline)
+            Text(error.message).font(.subheadline)
+            if let trace = error.traceID { Text("Support reference: " + trace).font(.caption).textSelection(.enabled) }
+            if let retry { Button("Try again", action: retry).buttonStyle(.bordered).frame(minHeight: 44) }
+        }
+        .padding().frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+        .accessibilityElement(children: .contain)
+        .onAppear { UIAccessibility.post(notification: .announcement, argument: error.title + ". " + error.message) }
+    }
+}
+struct EnvironmentBadge: View {
+    var body: some View {
+        Label(AppConfiguration.preview ? "Preview · sample data" : AppConfiguration.environment, systemImage: AppConfiguration.preview ? "testtube.2" : "lock.shield")
+            .font(.caption.weight(.semibold))
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(AdminTheme.accent.opacity(0.1), in: Capsule())
+    }
 }
