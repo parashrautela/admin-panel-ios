@@ -1,616 +1,247 @@
 import SwiftUI
 
-// Mirrors the web AdminDashboard screen.
+struct ReviewRoute: Hashable { let entity: ReviewEntity; let id: String }
+enum AdminDestination: String, CaseIterable, Identifiable {
+    case wholesalers, retailers, system, account
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+    var symbol: String {
+        switch self {
+        case .wholesalers: return "shippingbox"
+        case .retailers: return "storefront"
+        case .system: return "server.rack"
+        case .account: return "person.crop.circle"
+        }
+    }
+}
+
 struct AdminDashboardView: View {
-
-    private enum Tab: String, CaseIterable {
-        case wholesaler
-        case retailer
-        case apiBackend
-
-        var label: String {
-            switch self {
-            case .wholesaler: return "Wholesalers"
-            case .retailer: return "Retailers"
-            case .apiBackend: return "API Key & Backend"
-            }
-        }
-
-        // Fixed pill widths (not runtime-measured) so the glass thumb's
-        // position/size is plain arithmetic — no GeometryReader, no
-        // PreferenceKey, no chance of a measure/relayout feedback loop.
-        var pillWidth: CGFloat {
-            switch self {
-            case .wholesaler: return 128
-            case .retailer: return 108
-            case .apiBackend: return 150
-            }
-        }
-    }
-
-    private static let pillHeight: CGFloat = 52
-    private static let pillSpacing: CGFloat = 4
-    private static let trayPadding: CGFloat = 4
-
-    private struct LoadKey: Equatable {
-        let entity: ReviewEntity
-        let filter: WholesalerStatus?
-        let search: String
-    }
-
-    @State private var selectedEntity: ReviewEntity = .wholesaler
-    @State private var selectedFilter: WholesalerStatus? = nil
-    @State private var searchQuery = ""
-    @State private var submissions: [Submission] = []
-    @State private var statusCounts: [WholesalerStatus: Int] = [:]
-    @State private var loading = true
-    @State private var showApiPanel = false
-
-    private var activeTab: Tab {
-        showApiPanel ? .apiBackend : (selectedEntity == .retailer ? .retailer : .wholesaler)
-    }
-
+    @EnvironmentObject private var auth: AdminAuth
+    @Environment(\.horizontalSizeClass) private var size
+    @StateObject private var queue = QueueStore()
+    @State private var destination: AdminDestination? = .wholesalers
+    @State private var selected: String?
+    @State private var compactTab = 0
     var body: some View {
-        ZStack {
-            LiquidBackground()
-                .ignoresSafeArea()
-
-            ZStack(alignment: .top) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        if !showApiPanel {
-                            statsRow
-                                .padding(.bottom, 48)
+        Group {
+            if size == .regular {
+                NavigationSplitView {
+                    List(selection: $destination) {
+                        Section {
+                            Label("Jewel India", systemImage: "diamond.fill").font(.title2.bold()).foregroundStyle(AdminTheme.accent)
+                            EnvironmentBadge()
                         }
-
-                        titleRow
-                            .padding(.bottom, 32)
-
-                        if showApiPanel {
-                            APIBackendPanel()
-                        } else {
-                            searchBar
-                                .padding(.bottom, 24)
-                            filterChips
-                                .padding(.bottom, 32)
-                            submissionsTable
-                        }
-                    }
-                    .padding(.horizontal, 32)
-                    .padding(.top, 96)
-                    .padding(.bottom, 40)
-                    .frame(maxWidth: 1280)
-                    .frame(maxWidth: .infinity)
-                }
-
-                navBar
-            }
-        }
-        .toolbar(.hidden, for: .navigationBar)
-        .task(id: LoadKey(entity: selectedEntity, filter: selectedFilter, search: searchQuery)) {
-            // 300ms debounce, matching the web's search debounce.
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            guard !Task.isCancelled else { return }
-            await loadDashboard()
-        }
-    }
-
-    // MARK: - Sections
-
-    private var navBar: some View {
-        HStack {
-            HStack(spacing: 8) {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color.black)
-                    .frame(width: 32, height: 32)
-                Text("Admin")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.gray900)
-            }
-            Spacer()
-            HStack(spacing: 16) {
-                Text("Admin User")
-                    .font(.system(size: 14))
-                    .foregroundColor(.gray600)
-                Circle()
-                    .fill(Color.black)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white)
-                    )
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .glassEffect(.regular, in: Capsule())
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .frame(maxWidth: 1280)
-        .frame(maxWidth: .infinity)
-    }
-
-    private var statsRow: some View {
-        GlassEffectContainer(spacing: 24) {
-            HStack(spacing: 24) {
-                StatCard(value: statusCounts[.pending] ?? 0, label: "Pending review")
-                StatCard(value: statusCounts[.on_hold] ?? 0, label: "On Hold")
-                StatCard(value: statusCounts[.verified] ?? 0, label: "Verified total")
-                StatCard(value: statusCounts[.banned] ?? 0, label: "Banned")
-            }
-        }
-    }
-
-    private var titleRow: some View {
-        HStack(alignment: .center) {
-            Text(showApiPanel ? "API Keys & Backend" : "\(selectedEntity.label) submissions")
-                .font(.system(size: 30, weight: .light))
-                .foregroundColor(.gray900)
-            Spacer()
-            tabPills
-        }
-    }
-
-    private var tabPills: some View {
-        GlassEffectContainer(spacing: 12) {
-            ZStack(alignment: .topLeading) {
-                // Single persistent glass thumb — never inserted/removed, so its
-                // frame change under withAnimation always animates smoothly. Its
-                // geometry is plain arithmetic from the fixed pill widths above.
-                Capsule()
-                    .glassEffect(.regular.tint(.black.opacity(0.62)).interactive(), in: Capsule())
-                    .frame(width: activeTab.pillWidth, height: Self.pillHeight)
-                    .offset(x: thumbOffsetX, y: Self.trayPadding)
-
-                HStack(spacing: Self.pillSpacing) {
-                    ForEach(Tab.allCases, id: \.self) { tab in
-                        tabButton(tab)
-                    }
-                }
-                .padding(Self.trayPadding)
-            }
-            .glassEffect(.regular, in: Capsule())
-        }
-    }
-
-    private var thumbOffsetX: CGFloat {
-        var x = Self.trayPadding
-        for tab in Tab.allCases {
-            if tab == activeTab { break }
-            x += tab.pillWidth + Self.pillSpacing
-        }
-        return x
-    }
-
-    private func tabButton(_ tab: Tab) -> some View {
-        Button {
-            selectTab(tab)
-        } label: {
-            Text(tab.label)
-                .multilineTextAlignment(.center)
-                .font(.system(size: 14, weight: .medium))
-                .frame(width: tab.pillWidth, height: Self.pillHeight)
-                .foregroundColor(activeTab == tab ? .white : .gray700)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func selectTab(_ tab: Tab) {
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.74, blendDuration: 0.2)) {
-            if tab == .apiBackend {
-                showApiPanel = true
-            } else {
-                showApiPanel = false
-                selectedEntity = tab == .retailer ? .retailer : .wholesaler
-            }
-        }
-    }
-
-    private var searchBar: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 17))
-                .foregroundColor(.gray400)
-            TextField("Search \(selectedEntity.label.lowercased())s...", text: $searchQuery)
-                .font(.system(size: 16))
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
-        .glassEffect(.regular.tint(.white.opacity(0.4)), in: Capsule())
-        .frame(maxWidth: 448)
-    }
-
-    private var filterChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            GlassEffectContainer(spacing: 12) {
-                HStack(spacing: 12) {
-                    FilterChip(
-                        label: "All",
-                        count: nil,
-                        isSelected: selectedFilter == nil
-                    ) { selectedFilter = nil }
-
-                    ForEach([WholesalerStatus.pending, .on_hold, .verified, .rejected, .resubmission_required, .banned], id: \.self) { status in
-                        FilterChip(
-                            label: status.filterLabel,
-                            count: statusCounts[status] ?? 0,
-                            isSelected: selectedFilter == status
-                        ) { selectedFilter = status }
-                    }
-                }
-            }
-        }
-    }
-
-    private var submissionsTable: some View {
-        GeometryReader { geo in
-            let width = geo.size.width
-            VStack(spacing: 0) {
-                SubmissionHeaderRow(entityLabel: selectedEntity.label, width: width)
-                Divider().overlay(Color.gray100)
-
-                if loading {
-                    tableMessage("Loading \(selectedEntity.label.lowercased())s...")
-                } else if submissions.isEmpty {
-                    tableMessage("No \(selectedEntity.label.lowercased())s found.")
-                } else {
-                    ForEach(Array(submissions.enumerated()), id: \.element.id) { index, submission in
-                        SubmissionRow(submission: submission, entity: selectedEntity, width: width)
-                        if index < submissions.count - 1 {
-                            Divider().overlay(Color.gray100)
-                        }
-                    }
-                }
-            }
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.gray200.opacity(0.6), lineWidth: 1)
-            )
-        }
-        .frame(minHeight: tableHeight)
-    }
-
-    private var tableHeight: CGFloat {
-        let rows = loading || submissions.isEmpty ? 1 : CGFloat(submissions.count)
-        let rowHeight: CGFloat = loading || submissions.isEmpty ? 88 : 81
-        return 49 + rows * rowHeight + 8
-    }
-
-    private func tableMessage(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 15))
-            .foregroundColor(.gray500)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 40)
-    }
-
-    // MARK: - Data
-
-    private func loadDashboard() async {
-        loading = true
-        do {
-            async let counts = AdminAPI.fetchStatusCounts(entity: selectedEntity)
-            async let rows = AdminAPI.fetchSubmissions(
-                entity: selectedEntity,
-                statusFilter: selectedFilter,
-                searchQuery: searchQuery
-            )
-            statusCounts = try await counts
-            submissions = try await rows
-        } catch {
-            if !(error is CancellationError) {
-                print("Failed to fetch dashboard data: \(error)")
-            }
-        }
-        loading = false
-    }
-}
-
-// MARK: - Components
-
-struct StatCard: View {
-    let value: Int
-    let label: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("\(value)")
-                .font(.system(size: 36, weight: .light))
-                .foregroundColor(.gray900)
-            Text(label)
-                .font(.system(size: 14))
-                .foregroundColor(.gray600)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(24)
-        .glassEffect(.regular.tint(.white.opacity(0.35)), in: RoundedRectangle(cornerRadius: 16))
-    }
-}
-
-struct FilterChip: View {
-    let label: String
-    let count: Int?
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button {
-            withAnimation(.smooth(duration: 0.3)) {
-                action()
-            }
-        } label: {
-            HStack(spacing: 6) {
-                Text(label)
-                if let count {
-                    Text("\(count)")
-                }
-            }
-            .font(.system(size: 14, weight: .medium))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .foregroundColor(isSelected ? .white : .gray700)
-            .glassEffect(
-                isSelected
-                    ? .regular.tint(.black.opacity(0.62)).interactive()
-                    : .regular.tint(.white.opacity(0.3)).interactive(),
-                in: Capsule()
-            )
-        }
-        .buttonStyle(.plain)
-        .animation(.spring(response: 0.4, dampingFraction: 0.75), value: isSelected)
-    }
-}
-
-struct StatusBadge: View {
-    let status: WholesalerStatus
-
-    private var background: Color {
-        switch status {
-        case .pending: return .gray100
-        case .on_hold: return .blue100
-        case .verified, .banned: return .black
-        case .resubmission_required: return .yellow100
-        case .rejected: return .red100
-        }
-    }
-
-    private var foreground: Color {
-        switch status {
-        case .pending: return .gray900
-        case .on_hold: return .blue900
-        case .verified, .banned: return .white
-        case .resubmission_required: return .yellow900
-        case .rejected: return .red900
-        }
-    }
-
-    var body: some View {
-        Text(status.label)
-            .font(.system(size: 12, weight: .medium))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(background)
-            .foregroundColor(foreground)
-            .clipShape(Capsule())
-    }
-}
-
-private struct TableColumns {
-    let person: CGFloat
-    let business: CGFloat
-    let location: CGFloat
-    let submitted: CGFloat
-    let status: CGFloat
-    let action: CGFloat
-
-    init(width: CGFloat) {
-        let usable = max(width - 48, 300)
-        person = usable * 0.26
-        business = usable * 0.19
-        location = usable * 0.19
-        submitted = usable * 0.13
-        status = usable * 0.13
-        action = usable * 0.10
-    }
-}
-
-private struct SubmissionHeaderRow: View {
-    let entityLabel: String
-    let width: CGFloat
-
-    var body: some View {
-        let cols = TableColumns(width: width)
-        HStack(spacing: 0) {
-            headerCell(entityLabel.uppercased(), width: cols.person)
-            headerCell("BUSINESS", width: cols.business)
-            headerCell("LOCATION", width: cols.location)
-            headerCell("SUBMITTED", width: cols.submitted)
-            headerCell("STATUS", width: cols.status)
-            headerCell("", width: cols.action)
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
-    }
-
-    private func headerCell(_ text: String, width: CGFloat) -> some View {
-        Text(text)
-            .font(.system(size: 12, weight: .medium))
-            .kerning(0.6)
-            .foregroundColor(.gray500)
-            .lineLimit(1)
-            .frame(width: width, alignment: .leading)
-    }
-}
-
-private struct SubmissionRow: View {
-    let submission: Submission
-    let entity: ReviewEntity
-    let width: CGFloat
-
-    var body: some View {
-        let cols = TableColumns(width: width)
-        HStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Circle()
-                    .fill(Color.gray900)
-                    .frame(width: 40, height: 40)
-                    .overlay(
-                        Text(submission.initial)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white)
-                    )
-                Text(submission.displayName)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.gray900)
-                    .lineLimit(1)
-            }
-            .frame(width: cols.person, alignment: .leading)
-
-            Text(submission.business_name ?? "—")
-                .font(.system(size: 15))
-                .foregroundColor(.gray700)
-                .lineLimit(1)
-                .frame(width: cols.business, alignment: .leading)
-
-            Text("\(submission.city ?? "—"), \(submission.state ?? "—")")
-                .font(.system(size: 15))
-                .foregroundColor(.gray600)
-                .lineLimit(1)
-                .frame(width: cols.location, alignment: .leading)
-
-            Text(submission.submittedDateText)
-                .font(.system(size: 14))
-                .foregroundColor(.gray600)
-                .lineLimit(1)
-                .frame(width: cols.submitted, alignment: .leading)
-
-            HStack {
-                StatusBadge(status: submission.status)
-                Spacer(minLength: 0)
-            }
-            .frame(width: cols.status, alignment: .leading)
-
-            NavigationLink(value: ReviewRoute(entity: entity, id: submission.id)) {
-                Text(submission.status == .verified || submission.status == .banned ? "View" : "Review")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.black)
-            }
-            .buttonStyle(.plain)
-            .frame(width: cols.action, alignment: .leading)
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 20)
-    }
-}
-
-// MARK: - API panel
-
-private struct APIService: Identifiable {
-    let name: String
-    let description: String
-    let url: String
-    let initial: String
-    var id: String { name }
-}
-
-struct APIBackendPanel: View {
-    private let services = [
-        APIService(name: "Supabase", description: "Database, Authentication & Storage", url: "https://supabase.com/", initial: "S"),
-        APIService(name: "Railway", description: "Backend Infrastructure & Deployment", url: "https://railway.com/dashboard", initial: "R"),
-        APIService(name: "Vercel", description: "Frontend Hosting & Edge Network", url: "https://vercel.com/", initial: "V"),
-        APIService(name: "Nano Banana", description: "Service Integration", url: "https://nanobananaapi.ai/dashboard", initial: "N")
-    ]
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                headerCell("SERVICE").frame(maxWidth: .infinity, alignment: .leading)
-                headerCell("DESCRIPTION").frame(maxWidth: .infinity, alignment: .leading)
-                headerCell("STATUS").frame(width: 120, alignment: .leading)
-                headerCell("").frame(width: 90, alignment: .leading)
-            }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 16)
-            Divider().overlay(Color.gray100)
-
-            ForEach(Array(services.enumerated()), id: \.element.id) { index, service in
-                HStack(spacing: 0) {
-                    HStack(spacing: 12) {
-                        Circle()
-                            .fill(Color.gray900)
-                            .frame(width: 40, height: 40)
-                            .overlay(
-                                Text(service.initial)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.white)
-                            )
-                        Text(service.name)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.gray900)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Text(service.description)
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray600)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    HStack {
-                        Text("Active")
-                            .font(.system(size: 12, weight: .medium))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(Color.black)
-                            .foregroundColor(.white)
-                            .clipShape(Capsule())
-                        Spacer(minLength: 0)
-                    }
-                    .frame(width: 120)
-
-                    if let url = URL(string: service.url) {
-                        Link(destination: url) {
-                            HStack(spacing: 6) {
-                                Text("Open")
-                                Image(systemName: "arrow.up.right")
-                                    .font(.system(size: 12, weight: .medium))
+                        Section("Workspace") {
+                            ForEach(AdminDestination.allCases) { item in
+                                Label(item.title, systemImage: item.symbol).padding(.vertical, 6).tag(item)
                             }
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.black)
                         }
-                        .frame(width: 90, alignment: .leading)
+                        if !queue.saved.isEmpty {
+                            Section("Saved views") {
+                                ForEach(queue.saved) { view in
+                                    Button { destination = view.entity == .wholesaler ? .wholesalers : .retailers; queue.apply(view); selected = nil } label: {
+                                        Label(view.name, systemImage: "bookmark").frame(minHeight: 44)
+                                    }
+                                    .contextMenu { Button("Delete saved view", role: .destructive) { queue.removeSaved(id: view.id) } }
+                                }
+                            }
+                        }
+                    }.navigationTitle("Workspace")
+                        .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 270)
+                } content: {
+                    if destination == .system { SystemView() }
+                    else if destination == .account { AccountView() }
+                    else { QueueView(store: queue, selection: $selected, split: true) }
+                } detail: {
+                    if let selected, destination != .system, destination != .account {
+                        WholesalerReviewView(entity: queue.entity, submissionId: selected).id(queue.entity.table + selected)
+                    } else {
+                        ContentUnavailableView("Your review workspace", systemImage: "doc.text.magnifyingglass", description: Text("Choose an application to inspect its evidence, activity, and decision options."))
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 20)
-
-                if index < services.count - 1 {
-                    Divider().overlay(Color.gray100)
+                .navigationSplitViewStyle(.balanced)
+            } else {
+                TabView(selection: $compactTab) {
+                    NavigationStack {
+                        QueueView(store: queue, selection: $selected, split: false)
+                            .navigationDestination(for: ReviewRoute.self) { route in WholesalerReviewView(entity: route.entity, submissionId: route.id) }
+                    }.tabItem { Label("Queue", systemImage: "tray.full") }.tag(0)
+                    NavigationStack { SystemView() }.tabItem { Label("System", systemImage: "server.rack") }.tag(1)
+                    NavigationStack { AccountView() }.tabItem { Label("Account", systemImage: "person.crop.circle") }.tag(2)
                 }
             }
         }
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray200.opacity(0.6), lineWidth: 1)
-        )
-    }
-
-    private func headerCell(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 12, weight: .medium))
-            .kerning(0.6)
-            .foregroundColor(.gray500)
-            .lineLimit(1)
+        .task { queue.loadSaved(actor: auth.profile?.id ?? "unknown") }
+        .onChange(of: destination) { _, value in
+            if value == .wholesalers { queue.entity = .wholesaler }
+            if value == .retailers { queue.entity = .retailer }
+            selected = nil
+        }
+        .onChange(of: queue.entity) { selected = nil }
+        .onReceive(NotificationCenter.default.publisher(for: .adminDataChanged)) { _ in Task { await queue.refresh() } }
     }
 }
 
-#Preview {
-    NavigationStack {
-        AdminDashboardView()
+struct QueueView: View {
+    @ObservedObject var store: QueueStore
+    @Binding var selection: String?
+    var split: Bool
+    @Environment(\.dynamicTypeSize) private var textSize
+    @State private var saveSheet = false
+    @State private var saveName = ""
+    var body: some View {
+        List {
+            overview
+            filtersAndState
+            applications
+        }
+        .listStyle(.insetGrouped).navigationTitle(store.entity.label + "s")
+        .searchable(text: $store.search, prompt: "Search applicant or business")
+        .scrollDismissesKeyboard(.interactively)
+        .refreshable { await store.refresh() }
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button { Task { await store.refresh() } } label: { Label("Refresh", systemImage: "arrow.clockwise") }.keyboardShortcut("r", modifiers: .command)
+                Button { saveSheet = true } label: { Label("Save view", systemImage: "bookmark") }
+            }
+        }
+        .task(id: store.signature) { await store.load(debounce: true) }
+        .task(id: store.entity) { await store.loadCounts() }
+        .sheet(isPresented: $saveSheet) { savedViewsSheet }
+    }
+    private var overview: some View {
+        Section {
+                if !split {
+                    Picker("Application type", selection: $store.entity) {
+                        ForEach(ReviewEntity.allCases) { entity in Text(entity.label + "s").tag(entity) }
+                    }.pickerStyle(.segmented).accessibilityIdentifier("entityPicker")
+                }
+                EnvironmentBadge()
+                DisclosureGroup("Queue totals · all applications") {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: textSize.isAccessibilitySize ? 160 : 100))], spacing: 10) {
+                    ForEach(WholesalerStatus.allCases.filter { $0 != .unknown }) { status in
+                        Button {
+                            store.status = store.status == status ? nil : status
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(countText(status, fallback: "—")).font(.title2.bold())
+                                Text(status.label).font(.caption.weight(.medium)).fixedSize(horizontal: false, vertical: true)
+                            }.frame(maxWidth: .infinity, minHeight: 58, alignment: .leading).padding(10)
+                                .foregroundStyle(.primary)
+                                .background(store.status == status ? AdminTheme.accent.opacity(0.15) : AdminTheme.background, in: RoundedRectangle(cornerRadius: 12))
+                        }.buttonStyle(.plain)
+                            .accessibilityLabel(status.label + ", " + countText(status, fallback: "unavailable"))
+                            .accessibilityAddTraits(store.status == status ? [.isSelected] : [])
+                    }
+                }
+                }
+            }.listRowSeparator(.hidden)
+    }
+    private func countText(_ status: WholesalerStatus, fallback: String) -> String {
+        guard let value = store.counts?[status.rawValue] else { return fallback }
+        return String(value)
+    }
+    private var filtersAndState: some View {
+        Section {
+                ViewThatFits(in: .horizontal) {
+                    HStack { controls }
+                    VStack(alignment: .leading) { controls }
+                }
+                HStack {
+                    Text("\(store.total) matching applications").font(.subheadline.weight(.semibold))
+                    Spacer()
+                    if store.loading { ProgressView().accessibilityLabel("Updating applications") }
+                }
+                if let updated = store.updated {
+                    Text("Updated " + updated.formatted(date: .omitted, time: .shortened) + (store.loading || store.error != nil ? " · showing previous results" : ""))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                if let error = store.countError { ErrorPanel(error: error) { Task { await store.loadCounts() } } }
+                if let error = store.error { ErrorPanel(error: error) { Task { await store.load() } } }
+            }.listRowSeparator(.hidden)
+    }
+    private var applications: some View {
+        Section("Applications") {
+                if store.rows.isEmpty && !store.loading && store.error == nil {
+                    ContentUnavailableView(store.search.trimmed.isEmpty && store.status == nil ? "Queue is clear" : "No matching applications", systemImage: "tray", description: Text("Try another filter, or refresh for new submissions."))
+                    if store.status != nil || !store.search.isEmpty || store.ownership != "all" {
+                        Button("Clear filters") { store.status = nil; store.search = ""; store.ownership = "all" }.frame(minHeight: 44)
+                    }
+                } else if store.rows.isEmpty && store.loading {
+                    ProgressView("Loading applications…").frame(maxWidth: .infinity, minHeight: 100)
+                }
+                ForEach(store.rows) { row in
+                    if split {
+                        Button { selection = row.id } label: { SubmissionRow(submission: row, selected: row.id == selection) }
+                            .buttonStyle(.plain).accessibilityIdentifier("review-" + row.id)
+                            .accessibilityAddTraits(row.id == selection ? [.isSelected] : [])
+                    } else {
+                        NavigationLink(value: ReviewRoute(entity: store.entity, id: row.id)) {
+                            SubmissionRow(submission: row, selected: false)
+                        }.accessibilityIdentifier("review-" + row.id)
+                    }
+                }
+                if store.cursor != nil {
+                    Button { Task { await store.loadMore() } } label: {
+                        HStack { if store.loadingMore { ProgressView() }; Text("Load more applications") }.frame(maxWidth: .infinity, minHeight: 44)
+                    }.disabled(store.loading || store.loadingMore)
+                }
+            }
+    }
+    private var savedViewsSheet: some View {
+        NavigationStack {
+                Form {
+                    TextField("View name", text: $saveName)
+                    Text("Saves these filters and search on this device for your account.").font(.footnote)
+                    Button("Save current view") { store.save(name: saveName); saveName = ""; saveSheet = false }.disabled(saveName.trimmed.isEmpty)
+                    ForEach(store.saved) { view in
+                        Button(view.name) { store.apply(view); saveSheet = false }
+                            .swipeActions { Button("Delete", role: .destructive) { store.removeSaved(id: view.id) } }
+                    }
+                }.navigationTitle("Saved views")
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { saveSheet = false } } }
+        }
+    }
+    @ViewBuilder private var controls: some View {
+        Menu {
+            Button("All statuses") { store.status = nil }
+            ForEach(WholesalerStatus.allCases) { status in Button(status.label) { store.status = status } }
+        } label: { Label(store.status?.label ?? "All statuses", systemImage: "line.3.horizontal.decrease").frame(minHeight: 44) }
+        Picker("Sort", selection: $store.sort) {
+            Text("Oldest first").tag("oldest")
+            Text("Newest first").tag("newest")
+            Text("Business name").tag("name")
+        }.pickerStyle(.menu).frame(minHeight: 44)
+        Picker("Assignment", selection: $store.ownership) {
+            Text("Everyone").tag("all")
+            Text("Assigned to me").tag("mine")
+            Text("Unassigned").tag("unassigned")
+        }.pickerStyle(.menu).frame(minHeight: 44)
+    }
+}
+struct SubmissionRow: View {
+    let submission: Submission
+    let selected: Bool
+    var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            ViewThatFits(in: .horizontal) {
+                HStack { Text(submission.business).font(.headline); Spacer(); StatusBadge(status: submission.status) }
+                VStack(alignment: .leading, spacing: 8) { Text(submission.business).font(.headline); StatusBadge(status: submission.status) }
+            }
+            Text(submission.displayName).font(.subheadline)
+            Label(submission.location, systemImage: "mappin.and.ellipse").font(.caption).foregroundStyle(.secondary)
+            HStack {
+                Text(submission.createdDate == nil ? "Submitted time unavailable" : "\(submission.ageDays) days in queue")
+                Spacer()
+                Label(submission.assigned_to == nil ? "Unassigned" : "Assigned", systemImage: "person")
+            }.font(.caption).foregroundStyle(.secondary)
+            if let due = Submission.date(submission.follow_up_at) {
+                Label(due < Date() ? "Follow-up overdue" : "Follow-up " + due.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
+                    .font(.caption).foregroundStyle(due < Date() ? .red : .secondary)
+            }
+        }
+        .padding(.vertical, 10).padding(.horizontal, selected ? 10 : 0)
+        .background(selected ? AdminTheme.accent.opacity(0.1) : Color.clear, in: RoundedRectangle(cornerRadius: 14))
+        .accessibilityElement(children: .combine)
     }
 }

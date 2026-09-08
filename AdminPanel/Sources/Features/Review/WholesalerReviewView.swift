@@ -1,701 +1,350 @@
 import SwiftUI
 
-// Mirrors the web WholesalerReview screen.
 struct WholesalerReviewView: View {
     let entity: ReviewEntity
     let submissionId: String
-
-    @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var toast: ToastCenter
-
-    @State private var submission: Submission?
-    @State private var loading = true
-    @State private var loadFailed = false
-
-    @State private var showResubmission = false
-    @State private var showRejection = false
-    @State private var showBanModal = false
-    @State private var selectedDocuments: [String] = []
-    @State private var resubmissionReason = ""
-    @State private var rejectionReason = ""
-    @State private var rejectionNotes = ""
-    @State private var adminNotes = ""
-    @State private var actionLoading = false
-
-    private let resubmissionDocs = ["Aadhaar Front", "Aadhaar Back", "PAN Card", "GST Certificate"]
-    private let rejectionReasons = [
-        "Documents appear fraudulent or tampered",
-        "Business does not exist or unverifiable",
-        "Aadhaar details do not match business name",
-        "GST number is invalid or expired",
-        "PAN card does not match submitted details",
-        "Incomplete submission — missing documents",
-        "Duplicate account detected",
-        "Other (specify below)"
-    ]
-
+    @EnvironmentObject private var auth: AdminAuth
+    @Environment(\.scenePhase) private var scene
+    @State private var detail: ReviewDetail?
+    @State private var error: AdminAPIError?
+    @State private var busy = false
+    @State private var noteText = ""
+    @State private var noteID = UUID().uuidString
+    @State private var noteBusy = false
+    @State private var noteError: AdminAPIError?
+    @State private var actionError: AdminAPIError?
+    @State private var revealed: String?
+    @State private var viewing: EvidenceDocument?
+    @State private var inspected: Set<String> = []
+    @State private var assessments: [String: String] = [:]
+    @State private var decisionOpen = false
+    @State private var confirmBanOpen = false
+    @State private var confirmationReason = ""
+    @State private var banCommand = UUID().uuidString
+    @State private var receipt: DecisionReceipt?
+    @State private var accountActionBusy = false
     var body: some View {
-        ZStack {
-            LiquidBackground()
-
-            Group {
-                if loading {
-                    centerMessage("Loading \(entity.label) data...", color: .gray500)
-                } else if let submission {
-                    content(submission)
-                } else {
-                    centerMessage("\(entity.label) not found", color: .red500)
-                }
-            }
-        }
-        .toolbar(.hidden, for: .navigationBar)
-        .task {
-            do {
-                let data = try await AdminAPI.fetchSubmissionDetail(entity: entity, id: submissionId)
-                submission = data
-                adminNotes = data.admin_notes ?? ""
-            } catch {
-                loadFailed = true
-                toast.show("Failed to load \(entity.label.lowercased()) details", isError: true)
-            }
-            loading = false
-        }
-        .overlay {
-            if showBanModal, let submission {
-                banModal(submission)
-            }
-        }
-    }
-
-    private func centerMessage(_ text: String, color: Color) -> some View {
-        VStack {
-            Spacer()
-            Text(text)
-                .font(.system(size: 15))
-                .foregroundColor(color)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    // MARK: - Main layout
-
-    private func content(_ submission: Submission) -> some View {
         ScrollView {
-            HStack(alignment: .top, spacing: 40) {
-                leftColumn(submission)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                actionsPanel(submission)
-                    .frame(width: 300)
-            }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 40)
-            .frame(maxWidth: 1280)
-            .frame(maxWidth: .infinity)
-        }
-    }
-
-    private func leftColumn(_ submission: Submission) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button {
-                dismiss()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 14, weight: .medium))
-                    Text("Back")
-                        .font(.system(size: 15, weight: .medium))
-                }
-                .foregroundColor(.black)
-            }
-            .buttonStyle(.plain)
-            .padding(.bottom, 24)
-
-            VStack(alignment: .leading, spacing: 12) {
-                Text(submission.displayName)
-                    .font(.system(size: 30, weight: .light))
-                    .foregroundColor(.gray900)
-                HStack(spacing: 12) {
-                    Text(submission.submittedDateText)
-                    Text("•")
-                    Text(submission.id)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .frame(maxWidth: 150, alignment: .leading)
-                    StatusBadge(status: submission.status)
-                }
-                .font(.system(size: 14))
-                .foregroundColor(.gray600)
-            }
-            .padding(.bottom, 40)
-
-            personalDetails(submission)
-                .padding(.bottom, 24)
-            businessDetails(submission)
-                .padding(.bottom, 24)
-            verificationDocuments(submission)
-        }
-    }
-
-    // MARK: - Detail cards
-
-    private func personalDetails(_ submission: Submission) -> some View {
-        sectionCard("Personal Details") {
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack(alignment: .top, spacing: 24) {
-                        infoField("FULL NAME", submission.displayName)
-                        infoField("AADHAAR NUMBER", submission.aadhar_number ?? "N/A")
-                    }
-                    infoField("SUBMITTED", submission.submittedDateTimeText)
-                }
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.gray50)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                HStack(alignment: .top, spacing: 20) {
-                    DocumentCard(url: submission.aadhaar_front_url, label: "Aadhaar Front")
-                    DocumentCard(url: submission.aadhaar_back_url, label: "Aadhaar Back")
-                }
-            }
-        }
-    }
-
-    private func businessDetails(_ submission: Submission) -> some View {
-        sectionCard("Business Details") {
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack(alignment: .top, spacing: 24) {
-                        infoField("BUSINESS NAME", submission.business_name ?? "—")
-                        infoField("STATE", submission.state ?? "—")
-                    }
-                    infoField("CITY", submission.city ?? "—")
-                }
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.gray50)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("BUSINESS LOGO")
-                        .font(.system(size: 12, weight: .medium))
-                        .kerning(0.6)
-                        .foregroundColor(.gray500)
-
-                    if let logoURL = submission.business_logo_url, let url = URL(string: logoURL) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            AsyncImage(url: url) { image in
-                                image.resizable().scaledToFill()
-                            } placeholder: {
-                                Color.gray100
+            VStack(alignment: .leading, spacing: 20) {
+                if let error { ErrorPanel(error: error) { Task { await load() } } }
+                if busy { ProgressView("Loading application…") }
+                if let detail {
+                    header(detail.submission)
+                    if let actionError { ErrorPanel(error: actionError, retry: nil) }
+                    if let request = detail.ban_request {
+                        Panel(title: "Ban request awaiting review", symbol: "person.2.badge.key") {
+                            Text(request.reason)
+                            Text("A different supervisor must approve this request.").font(.footnote).foregroundStyle(.secondary)
+                            if auth.profile?.isSupervisor == true && auth.profile?.id != request.requested_by {
+                                Button("Review ban request", role: .destructive) { confirmBanOpen = true }.frame(minHeight: 44)
                             }
-                            .frame(width: 64, height: 64)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.gray200, lineWidth: 1))
-
-                            Link(destination: url) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "arrow.up.right")
-                                        .font(.system(size: 13, weight: .medium))
-                                    Text("View full size")
+                        }
+                    }
+                    identity(detail.submission)
+                    Panel(title: "Evidence", symbol: "doc.text.viewfinder") {
+                        Text("Open each file, inspect it, and record an assessment. All four documents must pass before approval.")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                        ForEach(detail.documents) { document in
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack(alignment: .top) {
+                                    Image(systemName: document.available ? "doc.richtext" : "doc.badge.ellipsis").foregroundStyle(AdminTheme.accent).accessibilityHidden(true)
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(document.title).font(.headline)
+                                        Text(document.available ? document.filename : "Document not supplied").font(.caption).foregroundStyle(.secondary)
+                                        if let revision = document.revision { Text("Revision " + revision).font(.caption2).foregroundStyle(.secondary) }
+                                    }
+                                    Spacer()
+                                    if inspected.contains(document.kind) { Image(systemName: "checkmark.circle").foregroundStyle(.green).accessibilityLabel("Opened for inspection") }
                                 }
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.black)
+                                Button { viewing = document } label: {
+                                    Label(document.available ? "Inspect document" : "Document unavailable", systemImage: "viewfinder").frame(minHeight: 44)
+                                }.buttonStyle(.bordered).disabled(!document.available || error != nil)
+                                    .accessibilityIdentifier("inspect-" + document.kind)
+                                if auth.profile?.canReview == true {
+                                    Picker("Assessment for " + document.title, selection: assessmentBinding(document.kind)) {
+                                        Text("Not assessed").tag("")
+                                        Text("Pass").tag("pass")
+                                        Text("Needs replacement").tag("resubmit")
+                                        Text("Suspected tampering").tag("suspected")
+                                    }.pickerStyle(.menu).disabled(!inspected.contains(document.kind)).frame(minHeight: 44)
+                                }
                             }
-                        }
-                    } else {
-                        Circle()
-                            .fill(Color.gray900)
-                            .frame(width: 64, height: 64)
-                            .overlay(
-                                Text(submission.initial)
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundColor(.white)
-                            )
-                    }
-                }
-            }
-        }
-    }
-
-    private func verificationDocuments(_ submission: Submission) -> some View {
-        sectionCard("Verification Documents") {
-            HStack(alignment: .top, spacing: 20) {
-                DocumentCard(url: submission.pan_card_url, label: "PAN Card")
-                DocumentCard(url: submission.gst_certificate_url, label: "GST Certificate")
-            }
-        }
-    }
-
-    private func sectionCard(_ title: String, @ViewBuilder content: () -> some View) -> some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text(title)
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.gray900)
-            content()
-        }
-        .padding(32)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray200.opacity(0.6), lineWidth: 1)
-        )
-    }
-
-    private func infoField(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .kerning(0.6)
-                .foregroundColor(.gray500)
-            Text(value)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(.gray900)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    // MARK: - Actions panel
-
-    private func actionsPanel(_ submission: Submission) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Actions")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.gray900)
-                .padding(.bottom, 8)
-            Text("Review all documents before taking action")
-                .font(.system(size: 14))
-                .foregroundColor(.gray500)
-                .padding(.bottom, 32)
-
-            VStack(alignment: .leading, spacing: 12) {
-                actionBlock(caption: "\(entity.label) gets immediate access") {
-                    primaryButton("Verify & Approve", icon: "checkmark") {
-                        run { try await AdminAPI.verifySubmission(entity: entity, id: submission.id) }
-                    }
-                }
-
-                actionBlock(caption: "Flag for further review") {
-                    outlineButton("Put On Hold", icon: "pause") {
-                        run { try await AdminAPI.putOnHold(entity: entity, id: submission.id, notes: adminNotes) }
-                    }
-                }
-
-                actionBlock(caption: "Request specific documents") {
-                    outlineButton("Request Resubmission", icon: "arrow.counterclockwise") {
-                        withAnimation { showResubmission.toggle() }
-                    }
-                }
-
-                if showResubmission {
-                    resubmissionPanel(submission)
-                }
-
-                Divider().overlay(Color.gray200).padding(.vertical, 20)
-
-                outlineButton("Reject Application", icon: "xmark", borderColor: .gray900) {
-                    withAnimation { showRejection.toggle() }
-                }
-
-                if showRejection {
-                    rejectionPanel(submission)
-                }
-
-                Button {
-                    showBanModal = true
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "nosign")
-                            .font(.system(size: 13, weight: .medium))
-                        Text("Ban Permanently")
-                    }
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.gray900)
-                }
-                .buttonStyle(.plain)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 12)
-
-                notesSection(submission)
-                    .padding(.top, 32)
-            }
-            .disabled(actionLoading)
-            .opacity(actionLoading ? 0.6 : 1)
-        }
-        .padding(24)
-        .glassEffect(.regular.tint(.white.opacity(0.35)), in: RoundedRectangle(cornerRadius: 20))
-    }
-
-    private func actionBlock(caption: String, @ViewBuilder button: () -> some View) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            button()
-            Text(caption)
-                .font(.system(size: 12))
-                .foregroundColor(.gray500)
-                .padding(.horizontal, 4)
-        }
-    }
-
-    private func primaryButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 15, weight: .semibold))
-                Text(title)
-                    .font(.system(size: 15, weight: .medium))
-            }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
-        }
-        .buttonStyle(.glassProminent)
-        .tint(.black)
-    }
-
-    private func outlineButton(
-        _ title: String,
-        icon: String,
-        borderColor: Color = .gray300,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 15, weight: .medium))
-                Text(title)
-                    .font(.system(size: 15, weight: .medium))
-            }
-            .foregroundColor(.gray900)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
-        }
-        .buttonStyle(.glass)
-    }
-
-    private func resubmissionPanel(_ submission: Submission) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Select documents to resubmit:")
-                .font(.system(size: 14, weight: .medium))
-
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(resubmissionDocs, id: \.self) { doc in
-                    Button {
-                        if selectedDocuments.contains(doc) {
-                            selectedDocuments.removeAll { $0 == doc }
-                        } else {
-                            selectedDocuments.append(doc)
-                        }
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: selectedDocuments.contains(doc) ? "checkmark.square.fill" : "square")
-                                .font(.system(size: 17))
-                                .foregroundColor(selectedDocuments.contains(doc) ? .black : .gray400)
-                            Text(doc)
-                                .font(.system(size: 14))
-                                .foregroundColor(.gray900)
+                            if document.id != detail.documents.last?.id { Divider() }
                         }
                     }
-                    .buttonStyle(.plain)
+                    notesAndActivity(detail)
+                } else if !busy && error == nil {
+                    ContentUnavailableView("Select an application", systemImage: "doc.text.magnifyingglass")
                 }
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Reason (required)")
-                    .font(.system(size: 14, weight: .medium))
-                textArea($resubmissionReason, placeholder: "Explain what needs to be corrected...", height: 84)
-            }
-
-            Button {
-                run {
-                    try await AdminAPI.requestResubmission(
-                        entity: entity,
-                        id: submission.id,
-                        documents: selectedDocuments,
-                        reason: resubmissionReason
-                    )
-                }
-            } label: {
-                Text("Send Request")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
-            }
-            .buttonStyle(.glassProminent)
-            .tint(.black)
-            .disabled(resubmissionReason.isEmpty || selectedDocuments.isEmpty)
-            .opacity(resubmissionReason.isEmpty || selectedDocuments.isEmpty ? 0.5 : 1)
+            }.padding(20).frame(maxWidth: 1080).frame(maxWidth: .infinity)
         }
-        .padding(20)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray200.opacity(0.6), lineWidth: 1)
-        )
-    }
-
-    private func rejectionPanel(_ submission: Submission) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Select rejection reason:")
-                .font(.system(size: 14, weight: .medium))
-
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(rejectionReasons, id: \.self) { reason in
-                    Button {
-                        rejectionReason = reason
-                    } label: {
-                        HStack(alignment: .top, spacing: 10) {
-                            Image(systemName: rejectionReason == reason ? "largecircle.fill.circle" : "circle")
-                                .font(.system(size: 16))
-                                .foregroundColor(rejectionReason == reason ? .black : .gray400)
-                                .padding(.top, 1)
-                            Text(reason)
-                                .font(.system(size: 14))
-                                .foregroundColor(.gray900)
-                                .multilineTextAlignment(.leading)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Additional notes (optional)")
-                    .font(.system(size: 14, weight: .medium))
-                textArea($rejectionNotes, placeholder: "Add context...", height: 84)
-            }
-
-            Button {
-                let fullReason = rejectionReason + (rejectionNotes.isEmpty ? "" : " - \(rejectionNotes)")
-                run { try await AdminAPI.rejectSubmission(entity: entity, id: submission.id, reason: fullReason) }
-            } label: {
-                Text("Confirm Rejection")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
-            }
-            .buttonStyle(.glassProminent)
-            .tint(.black)
-            .disabled(rejectionReason.isEmpty)
-            .opacity(rejectionReason.isEmpty ? 0.5 : 1)
-        }
-        .padding(20)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray200.opacity(0.6), lineWidth: 1)
-        )
-    }
-
-    private func notesSection(_ submission: Submission) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Divider().overlay(Color.gray200)
-            Text("Internal notes")
-                .font(.system(size: 14, weight: .medium))
-                .padding(.top, 12)
-            textArea(
-                $adminNotes,
-                placeholder: "Add notes (not visible to \(entity.label.lowercased()))...",
-                height: 104,
-                background: .gray50
-            )
-            Button {
-                actionLoading = true
-                Task {
-                    do {
-                        try await AdminAPI.saveNotes(entity: entity, id: submission.id, notes: adminNotes)
-                        toast.show("Notes saved")
-                    } catch {
-                        toast.show("Failed to save notes", isError: true)
-                    }
-                    actionLoading = false
-                }
-            } label: {
-                Text("Save note")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.black)
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    private func textArea(
-        _ text: Binding<String>,
-        placeholder: String,
-        height: CGFloat,
-        background: Color = .white
-    ) -> some View {
-        ZStack(alignment: .topLeading) {
-            TextEditor(text: text)
-                .font(.system(size: 14))
-                .scrollContentBackground(.hidden)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 6)
-                .frame(height: height)
-                .background(background)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray300, lineWidth: 1)
-                )
-            if text.wrappedValue.isEmpty {
-                Text(placeholder)
-                    .font(.system(size: 14))
-                    .foregroundColor(.gray400)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 14)
-                    .allowsHitTesting(false)
-            }
-        }
-    }
-
-    // MARK: - Ban modal
-
-    private func banModal(_ submission: Submission) -> some View {
-        ZStack {
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture { showBanModal = false }
-
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .top, spacing: 16) {
-                    Circle()
-                        .fill(Color.gray100)
-                        .frame(width: 48, height: 48)
-                        .overlay(
-                            Image(systemName: "exclamationmark.circle")
-                                .font(.system(size: 22))
-                                .foregroundColor(.gray900)
-                        )
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Are you sure?")
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(.gray900)
-                        Text("This will permanently ban \(submission.displayName) from the platform. This action cannot be undone.")
-                            .font(.system(size: 14))
-                            .foregroundColor(.gray600)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                .padding(.bottom, 32)
-
+        .background(AdminTheme.background).navigationTitle("Application review")
+        .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            if let detail {
                 HStack(spacing: 12) {
-                    Button {
-                        showBanModal = false
-                    } label: {
-                        Text("Cancel")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.gray900)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 6)
-                    }
-                    .buttonStyle(.glass)
-
-                    Button {
-                        showBanModal = false
-                        run { try await AdminAPI.banSubmission(entity: entity, id: submission.id) }
-                    } label: {
-                        Text("Yes, Ban User")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 6)
-                    }
-                    .buttonStyle(.glassProminent)
-                    .tint(.black)
-                    .disabled(actionLoading)
+                    StatusBadge(status: detail.submission.status)
+                    Spacer(minLength: 4)
+                    Button { decisionOpen = true } label: {
+                        Label("Review decision", systemImage: "checklist").frame(minHeight: 44)
+                    }.buttonStyle(.borderedProminent)
+                        .disabled(!detail.submission.status.actionable || auth.profile?.canReview != true || error != nil || busy)
+                        .accessibilityIdentifier("reviewDecision")
+                }.padding(12).background(.regularMaterial)
+            }
+        }
+        .toolbar {
+            Button { Task { await load() } } label: { Label("Refresh application", systemImage: "arrow.clockwise") }.keyboardShortcut("r", modifiers: .command)
+        }
+        .task { await load() }
+        .refreshable { await load() }
+        .scrollDismissesKeyboard(.interactively)
+        .onChange(of: scene) { if scene != .active { revealed = nil } }
+        .sheet(item: $viewing) { document in
+            EvidenceViewer(entity: entity, submissionID: submissionId, initial: document, documents: detail?.documents ?? []) { kind in inspected.insert(kind) }
+        }
+        .sheet(isPresented: $decisionOpen) {
+            if let detail {
+                DecisionSheet(entity: entity, detail: detail, assessments: assessments) {
+                    Task { await load(); NotificationCenter.default.post(name: .adminDataChanged, object: nil) }
                 }
             }
-            .padding(32)
-            .glassEffect(.regular.tint(.white.opacity(0.5)), in: RoundedRectangle(cornerRadius: 20))
-            .frame(maxWidth: 448)
-            .padding(16)
+        }
+        .sheet(isPresented: $confirmBanOpen) {
+            NavigationStack {
+                Form {
+                    Text("Confirm permanent ban").font(.title2.bold())
+                    Text("This will block the account. Your confirmation is recorded separately from the requesting supervisor.")
+                    TextField("Independent review reason", text: $confirmationReason, axis: .vertical).lineLimit(3...8)
+                    if let actionError { ErrorPanel(error: actionError, retry: nil) }
+                    Button("Confirm permanent ban", role: .destructive) { Task { await confirmBan() } }
+                        .disabled(confirmationReason.trimmed.count < 5 || accountActionBusy)
+                    if accountActionBusy { ProgressView("Recording confirmation…") }
+                }.toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { confirmBanOpen = false }.disabled(accountActionBusy) } }
+            }.interactiveDismissDisabled(accountActionBusy)
+        }
+        .sheet(item: $receipt) { value in ReceiptView(receipt: value) { receipt = nil } }
+    }
+    @ViewBuilder private func header(_ submission: Submission) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            EnvironmentBadge()
+            Text(submission.business).font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
+            Text(submission.displayName + " · " + entity.label).font(.title3).foregroundStyle(.secondary)
+            Text(submission.submittedDateTimeText).font(.caption).foregroundStyle(.secondary)
+            HStack {
+                Text(submission.id).font(.caption.monospaced()).textSelection(.enabled)
+                Button {
+                    UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: submission.id]], options: [.localOnly: true, .expirationDate: Date().addingTimeInterval(60)])
+                    UIAccessibility.post(notification: .announcement, argument: "Application ID copied")
+                } label: { Image(systemName: "doc.on.doc").frame(width: 44, height: 44) }.accessibilityLabel("Copy application ID")
+            }
+            if auth.profile?.canReview == true {
+                let mine = submission.assigned_to == auth.profile?.id
+                Button { Task { await assign(!mine) } } label: {
+                    Label(mine ? "Release my assignment" : "Assign to me", systemImage: "person.crop.circle.badge.checkmark").frame(minHeight: 44)
+                }.buttonStyle(.bordered)
+                    .disabled(accountActionBusy || error != nil || (submission.assigned_to != nil && !mine && auth.profile?.isSupervisor != true))
+                if submission.assigned_to != nil && !mine { Text("Assigned to another reviewer").font(.caption).foregroundStyle(.secondary) }
+            }
         }
     }
-
-    // MARK: - Action runner (mirrors the web wrapAction)
-
-    private func run(_ action: @escaping () async throws -> Void) {
-        actionLoading = true
-        Task {
-            do {
-                try await action()
-                toast.show("Status updated successfully")
-                dismiss()
-            } catch {
-                toast.show(error.localizedDescription, isError: true)
+    private func identity(_ submission: Submission) -> some View {
+        Panel(title: "Applicant and business", symbol: "person.text.rectangle") {
+            LabeledContent("Applicant", value: submission.displayName)
+            LabeledContent("Business", value: submission.business)
+            LabeledContent("Location", value: submission.location)
+            LabeledContent("Email", value: submission.email?.nonblank ?? "Not provided")
+            LabeledContent("Phone", value: submission.phone?.nonblank ?? "Not provided")
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Aadhaar").font(.subheadline.weight(.semibold))
+                Text(revealed ?? submission.maskedAadhaar).font(.body.monospaced()).privacySensitive()
+                if auth.profile?.can_reveal_pii == true {
+                    Button(revealed == nil ? "Reveal for review" : "Hide Aadhaar") {
+                        if revealed != nil { revealed = nil }
+                        else { Task { await reveal() } }
+                    }.frame(minHeight: 44).disabled(accountActionBusy)
+                    Text("Reveals are recorded against your administrator account.").font(.caption).foregroundStyle(.secondary)
+                }
             }
-            actionLoading = false
+            if let reason = submission.rejection_reason?.nonblank { LabeledContent("Previous reason", value: reason) }
         }
+    }
+    private func notesAndActivity(_ detail: ReviewDetail) -> some View {
+        Panel(title: "Notes and activity", symbol: "clock.arrow.circlepath") {
+            if let oldNotes = detail.submission.admin_notes?.nonblank {
+                Text("Legacy note · author unavailable").font(.caption.weight(.semibold))
+                Text(oldNotes).font(.subheadline)
+                Divider()
+            }
+            if auth.profile?.canReview == true {
+                TextField("Add an internal note", text: $noteText, axis: .vertical).lineLimit(3...8).textFieldStyle(.roundedBorder).accessibilityIdentifier("internalNote")
+                Text("Internal only. Notes are added to history and cannot overwrite earlier notes.").font(.caption).foregroundStyle(.secondary)
+                if let noteError { ErrorPanel(error: noteError, retry: nil) }
+                Button { Task { await saveNote() } } label: {
+                    HStack { if noteBusy { ProgressView() }; Text("Add note") }.frame(minHeight: 44)
+                }.buttonStyle(.bordered).disabled(noteBusy || noteText.trimmed.isEmpty || noteText.count > 2000).accessibilityIdentifier("addNote")
+            }
+            if detail.events.isEmpty { Text("No recorded activity yet.").foregroundStyle(.secondary) }
+            ForEach(detail.events) { event in
+                VStack(alignment: .leading, spacing: 5) {
+                    Label(event.event_type.replacingOccurrences(of: "_", with: " ").capitalized, systemImage: event.event_type == "note" ? "text.bubble" : "clock")
+                        .font(.subheadline.weight(.semibold))
+                    Text(event.actor_name + " · " + Submission.timeText(event.occurred_at)).font(.caption).foregroundStyle(.secondary)
+                    if let reason = event.reason { Text(reason).font(.subheadline) }
+                    if let status = event.new_status { Text("Result: " + (WholesalerStatus(rawValue: status)?.label ?? status)).font(.caption) }
+                }.accessibilityElement(children: .combine)
+                Divider()
+            }
+        }
+    }
+    private func assessmentBinding(_ kind: String) -> Binding<String> { Binding(get: { assessments[kind] ?? "" }, set: { assessments[kind] = $0 }) }
+    private func load() async {
+        guard !busy else { return }
+        busy = true; error = nil
+        defer { busy = false }
+        do {
+            let value = try await AdminAPI.shared.detail(entity: entity, id: submissionId)
+            if detail?.submission.version != value.submission.version { inspected = []; assessments = [:] }
+            detail = value
+        } catch { self.error = AdminAPIError.map(error) }
+    }
+    private func saveNote() async {
+        guard !noteBusy, let value = noteText.nonblank else { return }
+        noteBusy = true; noteError = nil
+        defer { noteBusy = false }
+        do {
+            let result = try await AdminAPI.shared.note(entity: entity, id: submissionId, text: value, requestID: noteID)
+            noteText = ""; noteID = UUID().uuidString
+            UIAccessibility.post(notification: .announcement, argument: result.message)
+            await load()
+        } catch { noteError = AdminAPIError.map(error) }
+    }
+    private func assign(_ mine: Bool) async {
+        guard let detail, !accountActionBusy else { return }
+        accountActionBusy = true; actionError = nil
+        defer { accountActionBusy = false }
+        do {
+            _ = try await AdminAPI.shared.assign(entity: entity, submission: detail.submission, mine: mine, requestID: UUID().uuidString)
+            await load()
+            NotificationCenter.default.post(name: .adminDataChanged, object: nil)
+        } catch { actionError = AdminAPIError.map(error) }
+    }
+    private func reveal() async {
+        guard !accountActionBusy else { return }
+        accountActionBusy = true; actionError = nil
+        defer { accountActionBusy = false }
+        do { revealed = try await AdminAPI.shared.reveal(entity: entity, id: submissionId) }
+        catch { actionError = AdminAPIError.map(error) }
+    }
+    private func confirmBan() async {
+        guard let detail, let request = detail.ban_request, !accountActionBusy else { return }
+        accountActionBusy = true; actionError = nil
+        defer { accountActionBusy = false }
+        do {
+            let result = try await AdminAPI.shared.confirmBan(entity: entity, submission: detail.submission, request: request, reason: confirmationReason, requestID: banCommand)
+            confirmBanOpen = false; receipt = result; banCommand = UUID().uuidString
+            await load(); NotificationCenter.default.post(name: .adminDataChanged, object: nil)
+        } catch { actionError = AdminAPIError.map(error) }
     }
 }
 
-// MARK: - Document card
-
-struct DocumentCard: View {
-    let url: String?
-    let label: String
-
+struct DecisionSheet: View {
+    let entity: ReviewEntity
+    let detail: ReviewDetail
+    let assessments: [String: String]
+    let completed: () -> Void
+    @EnvironmentObject private var auth: AdminAuth
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft = DecisionDraft()
+    @State private var busy = false
+    @State private var error: AdminAPIError?
+    @State private var receipt: DecisionReceipt?
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(label)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.gray900)
-
-            VStack(alignment: .leading, spacing: 8) {
-                ZStack {
-                    Color.gray100
-                    if let url, let imageURL = URL(string: url) {
-                        AsyncImage(url: imageURL) { image in
-                            image.resizable().scaledToFill()
-                        } placeholder: {
-                            ProgressView()
+        NavigationStack {
+            if let receipt {
+                ReceiptView(receipt: receipt) { completed(); dismiss() }
+            } else {
+                Form {
+                    Section {
+                        Text(detail.submission.business).font(.headline)
+                        Text("Acting as " + (auth.profile?.display_name ?? "")).font(.subheadline)
+                        Picker("Outcome", selection: $draft.outcome) {
+                            ForEach(DecisionOutcome.allCases.filter { $0 != .ban || auth.profile?.isSupervisor == true }) { outcome in Text(outcome.title).tag(outcome) }
                         }
-                    } else {
-                        Text("Not provided")
-                            .font(.system(size: 14))
-                            .foregroundColor(.gray400)
+                        Text(draft.outcome.impact).font(.subheadline)
+                    }
+                    Section("Reason recorded in history") {
+                        TextField("Explain the decision", text: $draft.reason, axis: .vertical).lineLimit(3...8).accessibilityIdentifier("decisionReason")
+                    }
+                    if draft.outcome == .resubmit {
+                        Section("Documents to replace") {
+                            ForEach(detail.documents) { document in
+                                Toggle(document.title, isOn: Binding(get: { draft.documents.contains(document.kind) }, set: { if $0 { draft.documents.insert(document.kind) } else { draft.documents.remove(document.kind) } }))
+                            }
+                        }
+                    }
+                    if draft.outcome == .hold {
+                        Section("Follow-up") {
+                            DatePicker("Review again", selection: $draft.followUp, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                            Text("This application will be assigned to you.").font(.caption)
+                        }
+                    }
+                    if [.approve, .resubmit, .reject].contains(draft.outcome) {
+                        Section("Message the applicant will receive") {
+                            TextField("Applicant-facing message", text: $draft.message, axis: .vertical).lineLimit(3...8).accessibilityIdentifier("applicantMessage")
+                        }
+                    }
+                    Section {
+                        Toggle("I reviewed the evidence and understand this decision", isOn: $draft.confirmed).accessibilityIdentifier("decisionConfirm")
+                        if let validation = draft.validation(required: detail.documents, status: detail.submission.status) { Text(validation).font(.footnote).foregroundStyle(.secondary) }
+                        if let error { ErrorPanel(error: error, retry: nil) }
+                        Button {
+                            Task { await commit() }
+                        } label: {
+                            HStack { if busy { ProgressView() }; Text(busy ? "Recording decision…" : "Confirm decision") }.frame(maxWidth: .infinity, minHeight: 44)
+                        }.buttonStyle(.borderedProminent).tint([.reject, .ban].contains(draft.outcome) ? .red : AdminTheme.accent)
+                            .disabled(busy || draft.validation(required: detail.documents, status: detail.submission.status) != nil)
+                            .accessibilityIdentifier("commitDecision")
                     }
                 }
-                .frame(height: 160)
-                .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                Text("\(label).jpg")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.gray900)
-                    .lineLimit(1)
-
-                if let url, let linkURL = URL(string: url) {
-                    Link(destination: linkURL) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.up.right")
-                                .font(.system(size: 13, weight: .medium))
-                            Text("View full size")
-                        }
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.black)
-                    }
-                }
+                .disabled(busy)
+                .navigationTitle("Review decision").navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) } }
             }
-            .padding(16)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray200, lineWidth: 1)
-            )
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.gray50)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.gray100, lineWidth: 1)
-        )
+        .interactiveDismissDisabled(busy || receipt != nil)
+        .onAppear { draft.assessments = assessments }
+        .onChange(of: draft.outcome) {
+            draft.confirmed = false; error = nil
+            draft.message = ""; draft.requestID = UUID().uuidString
+        }
+    }
+    private func commit() async {
+        guard !busy, draft.validation(required: detail.documents, status: detail.submission.status) == nil else { return }
+        busy = true; error = nil
+        defer { busy = false }
+        do {
+            receipt = try await AdminAPI.shared.decide(entity: entity, submission: detail.submission, draft: draft)
+            UIAccessibility.post(notification: .announcement, argument: "Decision recorded")
+        } catch { self.error = AdminAPIError.map(error) }
+    }
+}
+struct ReceiptView: View {
+    let receipt: DecisionReceipt
+    let done: () -> Void
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Image(systemName: "checkmark.seal.fill").font(.largeTitle).foregroundStyle(.green).accessibilityHidden(true)
+                Text("Decision recorded").font(.largeTitle.bold())
+                Text(receipt.message).font(.title3)
+                LabeledContent("Previous status", value: WholesalerStatus(rawValue: receipt.previous_status)?.label ?? receipt.previous_status)
+                LabeledContent("Resulting status", value: WholesalerStatus(rawValue: receipt.new_status)?.label ?? receipt.new_status)
+                Text(Submission.timeText(receipt.committed_at)).font(.subheadline)
+                Text("Event reference").font(.headline)
+                Text(receipt.event_id).font(.body.monospaced()).textSelection(.enabled)
+                Button("Done", action: done).buttonStyle(.borderedProminent).frame(minHeight: 44).accessibilityIdentifier("receiptDone")
+            }.padding(28).frame(maxWidth: 650).frame(maxWidth: .infinity)
+        }
     }
 }

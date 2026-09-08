@@ -1,11 +1,16 @@
 name: AdminPanel
+schemes:
+  AdminPanelPreview:
+    build:
+      targets:
+        AdminPanel: all
+    run:
+      config: Debug
+      commandLineArguments:
+        "--preview-data": true
 options:
   bundleIdPrefix: com.jewelindia
   minimumXcodeGenVersion: 2.0.0
-packages:
-  Supabase:
-    url: https://github.com/supabase/supabase-swift.git
-    from: 2.0.0
 targets:
   AdminPanel:
     type: application
@@ -17,8 +22,20 @@ targets:
     sources:
       - path: AdminPanel/Sources
       - path: AdminPanel/Resources
-    dependencies:
-      - package: Supabase
+    # XcodeGen only writes an .xcscheme when a target declares one explicitly.
+    scheme:
+      testTargets:
+        - AdminPanelTests
+        - AdminPanelUITests
+    settings:
+      base:
+        # Kept in sync with the generated project — an empty value here wipes
+        # the team/signing style the next time anyone runs xcodegen, which
+        # silently breaks device builds and Archive.
+        DEVELOPMENT_TEAM: AAF6438546
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
     info:
       path: AdminPanel/Info.plist
       properties:
@@ -26,7 +43,36 @@ targets:
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
           UISceneConfigurations: {}
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleIconName: AppIcon
+        NSFaceIDUsageDescription: Unlock your saved administrator session on this device.
+        ADMIN_ENVIRONMENT: $(ADMIN_ENVIRONMENT)
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         SUPABASE_URL: $(SUPABASE_URL)
         SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
-        SUPABASE_SERVICE_ROLE_KEY: $(SUPABASE_SERVICE_ROLE_KEY)
-        ADMIN_PASSWORD: $(ADMIN_PASSWORD)
+  AdminPanelTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources: [Tests/Unit]
+    dependencies:
+      - target: AdminPanel
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.0"
+  AdminPanelUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources: [Tests/UI]
+    dependencies:
+      - target: AdminPanel
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.0"
