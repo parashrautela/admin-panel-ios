@@ -1,1 +1,4 @@
 *.xcconfig
+.DS_Store
+xcuserdata/
+build/

@@ -1,24 +1,20 @@
 import Foundation
+import Supabase
 
-enum AppConfiguration {
-    static var environment: String {
-        let value = Bundle.main.object(forInfoDictionaryKey: "ADMIN_ENVIRONMENT") as? String
-        return value?.nonblank.flatMap { $0.contains("$(") ? nil : $0 } ?? "Environment not set"
+// Anon key only — this app never holds the service-role key. Privileged
+// admin reads/writes go through password-gated Edge Functions instead (see
+// AdminAPI.swift), which hold the service-role key server-side.
+let supabase: SupabaseClient = {
+    guard let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
+          urlString.hasPrefix("http"),
+          let url = URL(string: urlString) else {
+        fatalError("SUPABASE_URL not found in Info.plist or is invalid.")
     }
-    static var preview: Bool {
-        #if DEBUG
-        return ProcessInfo.processInfo.arguments.contains("--preview-data")
-        #else
-        return false
-        #endif
+
+    guard let anonKey = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String,
+          !anonKey.isEmpty else {
+        fatalError("SUPABASE_ANON_KEY not found in Info.plist.")
     }
-    static func connection() throws -> (URL, String) {
-        guard let raw = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
-              let url = URL(string: raw), url.scheme == "https",
-              let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String,
-              !key.isEmpty, !key.contains("$(") else {
-            throw AdminAPIError(code: "configuration", message: "The server connection is not configured. Check the build configuration with your administrator.")
-        }
-        return (url, key)
-    }
-}
+
+    return SupabaseClient(supabaseURL: url, supabaseKey: anonKey)
+}()

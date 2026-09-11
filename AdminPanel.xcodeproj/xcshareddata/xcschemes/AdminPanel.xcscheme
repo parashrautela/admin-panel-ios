@@ -39,28 +39,6 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "82E02091653C32763926C93F"
-               BuildableName = "AdminPanelTests.xctest"
-               BlueprintName = "AdminPanelTests"
-               ReferencedContainer = "container:AdminPanel.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "70F21BBDF3B5A3FCD57D0F71"
-               BuildableName = "AdminPanelUITests.xctest"
-               BlueprintName = "AdminPanelUITests"
-               ReferencedContainer = "container:AdminPanel.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

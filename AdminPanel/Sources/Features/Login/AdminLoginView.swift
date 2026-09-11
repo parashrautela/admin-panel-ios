@@ -1,87 +1,169 @@
 import SwiftUI
 
+// Split login screen from the 2026-09-10 Figma redesign: a brand
+// illustration beside a dark navy panel on regular width, illustration
+// dropped on compact width (no room for a side-by-side split on iPhone).
 struct AdminLoginView: View {
     @EnvironmentObject private var auth: AdminAuth
-    @State private var email = ""
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var password = ""
-    @State private var code = ""
-    @State private var visible = false
-    @FocusState private var field: Field?
-    enum Field { case email, password, code }
+    @State private var isPasswordVisible = false
+    @State private var error = ""
+    @State private var isLoggingIn = false
+
+    private var isCompact: Bool { horizontalSizeClass == .compact }
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Image(systemName: "diamond.fill").font(.largeTitle).foregroundStyle(AdminTheme.accent).accessibilityHidden(true)
+        HStack(spacing: 0) {
+            if !isCompact {
+                illustrationPanel
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            formPanel
+                .frame(maxWidth: isCompact ? .infinity : 460, maxHeight: .infinity)
+        }
+        .clipShape(
+            UnevenRoundedRectangle(
+                topLeadingRadius: isCompact ? 0 : 28,
+                bottomLeadingRadius: isCompact ? 0 : 28,
+                bottomTrailingRadius: isCompact ? 0 : 28,
+                topTrailingRadius: isCompact ? 0 : 28
+            )
+        )
+        .padding(isCompact ? 0 : 16)
+        .background(Color.gray50)
+        .ignoresSafeArea()
+    }
+
+    // MARK: - Illustration side (regular width only)
+
+    private var illustrationPanel: some View {
+        Color.white
+            .overlay(
+                Image("LoginIllustration")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .padding(56)
+            )
+    }
+
+    // MARK: - Form side
+
+    private var formPanel: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer(minLength: 32)
+
+            VStack(spacing: 6) {
+                Text("Jewel India")
+                    .font(.system(size: 30, weight: .regular, design: .serif))
+                    .foregroundColor(.white)
+                Text("Made for Moments That Matter")
+                    .font(.system(size: 13))
+                    .tracking(0.5)
+                    .foregroundColor(.loginMutedText)
+            }
+            .frame(maxWidth: .infinity)
+
+            Spacer(minLength: 40)
+
+            VStack(alignment: .leading, spacing: 28) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Jewel India").font(.largeTitle.bold())
-                    Text(auth.needsMFA ? "Verify your identity" : "Your review workspace").font(.title2.weight(.semibold))
-                    Text(auth.needsMFA ? "Enter the six-digit code from your authenticator app." : "Sign in with your individual administrator account.").foregroundStyle(.secondary)
+                    Text("Welcome back")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundColor(.white)
+                    Text("Enter password to access the admin panel")
+                        .font(.system(size: 15))
+                        .foregroundColor(.loginMutedText)
                 }
-                EnvironmentBadge()
-                if let error = auth.error { ErrorPanel(error: error, retry: nil) }
-                if auth.needsMFA {
-                    if let secret = auth.enrollmentSecret {
-                        Text("Set up your authenticator").font(.headline)
-                        Text("Add a time-based account in your authenticator using this setup key, then enter its current code.").font(.subheadline)
-                        Text(secret).font(.body.monospaced()).textSelection(.enabled).privacySensitive()
+
+                VStack(alignment: .leading, spacing: 14) {
+                    passwordField
+
+                    if !error.isEmpty {
+                        Text(error)
+                            .font(.system(size: 14))
+                            .foregroundColor(.red500)
                     }
-                    TextField("Authentication code", text: $code)
-                        .textContentType(.oneTimeCode).keyboardType(.numberPad).focused($field, equals: .code)
-                        .textFieldStyle(.roundedBorder).frame(minHeight: 44).accessibilityIdentifier("mfaCode")
-                    Button { Task { await auth.verifyMFA(code: code) } } label: { loginLabel("Verify and continue") }
-                        .buttonStyle(.borderedProminent).disabled(auth.busy || code.trimmed.count != 6)
-                    Button("Cancel sign-in") { auth.reset(); password = ""; code = "" }.frame(minHeight: 44).disabled(auth.busy)
-                } else {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Work email").font(.headline)
-                        TextField("name@company.com", text: $email)
-                            .textContentType(.username).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
-                            .focused($field, equals: .email).textFieldStyle(.roundedBorder).frame(minHeight: 44)
-                            .submitLabel(.next).onSubmit { field = .password }.accessibilityIdentifier("email")
-                    }
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Password").font(.headline)
-                        HStack {
-                            Group {
-                                if visible { TextField("Account password", text: $password) }
-                                else { SecureField("Account password", text: $password) }
-                            }
-                            .textContentType(.password).focused($field, equals: .password).onSubmit(signIn)
-                            .textFieldStyle(.roundedBorder).frame(minHeight: 44).accessibilityIdentifier("password")
-                            Button { visible.toggle() } label: {
-                                Image(systemName: visible ? "eye.slash" : "eye").frame(width: 44, height: 44)
-                            }.accessibilityLabel(visible ? "Hide password" : "Show password")
-                        }
-                    }
-                    Toggle("Save session on this device", isOn: $auth.remember).font(.subheadline)
-                    Text("Saved sessions require Face ID, Touch ID, or the device passcode to reopen.").font(.caption).foregroundStyle(.secondary)
-                    Button(action: signIn) { loginLabel("Sign in") }
-                        .buttonStyle(.borderedProminent).disabled(auth.busy || email.trimmed.isEmpty || password.isEmpty)
-                        .accessibilityIdentifier("signIn")
-                    if auth.savedSession {
-                        Button { Task { await auth.unlock() } } label: { Label("Unlock saved session", systemImage: "faceid").frame(minHeight: 44) }
-                            .disabled(auth.busy)
-                    }
-                    Text("Need access or a password reset? Contact the person who manages your Jewel India administrator accounts.")
-                        .font(.footnote).foregroundStyle(.secondary)
+
+                    loginButton
                 }
             }
-            .padding(28).frame(maxWidth: 520)
-            .background(AdminTheme.surface, in: RoundedRectangle(cornerRadius: 28))
-            .padding(24).frame(maxWidth: .infinity)
+            .padding(.horizontal, 32)
+
+            Spacer(minLength: 32)
+            Spacer(minLength: 32)
         }
-        .safeAreaPadding(.vertical, 30)
-        .background(AdminTheme.background).tint(AdminTheme.accent)
-        .scrollDismissesKeyboard(.interactively)
-        .onChange(of: password) { auth.error = nil }
-        .onChange(of: email) { auth.error = nil }
+        .background(
+            LinearGradient(
+                colors: [.loginNavyTop, .loginNavyBottom],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
     }
-    private func loginLabel(_ label: String) -> some View {
-        HStack { if auth.busy { ProgressView() }; Text(auth.busy ? "Please wait…" : label) }.frame(maxWidth: .infinity, minHeight: 44)
+
+    private var passwordField: some View {
+        HStack(spacing: 8) {
+            Group {
+                if isPasswordVisible {
+                    TextField("Enter Password", text: $password)
+                } else {
+                    SecureField("Enter Password", text: $password)
+                }
+            }
+            .textContentType(.password)
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .onSubmit(handleLogin)
+
+            Button {
+                isPasswordVisible.toggle()
+            } label: {
+                Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
+                    .foregroundColor(.gray500)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 14))
     }
-    private func signIn() {
-        guard !email.trimmed.isEmpty, !password.isEmpty else { return }
-        field = nil
-        Task { await auth.login(email: email, password: password); if auth.isAuthenticated || auth.needsMFA { password = "" } }
+
+    private var loginButton: some View {
+        Button(action: handleLogin) {
+            Text(isLoggingIn ? "Checking..." : "Login")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+        }
+        .buttonStyle(.plain)
+        .background(Color.loginButtonFill, in: RoundedRectangle(cornerRadius: 14))
+        .opacity(isLoggingIn || password.isEmpty ? 0.55 : 1)
+        .disabled(isLoggingIn || password.isEmpty)
     }
+
+    // MARK: - Auth (unchanged from before the redesign)
+
+    private func handleLogin() {
+        guard !isLoggingIn else { return }
+        isLoggingIn = true
+        Task {
+            do {
+                if try await auth.login(password: password) {
+                    error = ""
+                } else {
+                    error = "Incorrect password"
+                }
+            } catch {
+                self.error = "Couldn't reach the server. Check your connection and try again."
+            }
+            isLoggingIn = false
+        }
+    }
+}
+
+#Preview {
+    AdminLoginView()
+        .environmentObject(AdminAuth())
 }

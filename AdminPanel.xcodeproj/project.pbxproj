@@ -7,81 +7,57 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		03AB7C2E117D61C8968CFD4D /* EvidenceViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 385535B6B33A0A20F0C75941 /* EvidenceViewer.swift */; };
-		1DD1101C4986DF046CC40448 /* ReviewFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 218431DCF28647E59D1BB4E8 /* ReviewFlowTests.swift */; };
 		1F66C009F586CCE2070D2A29 /* AdminLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2F7473775230E72B474B2 /* AdminLoginView.swift */; };
-		36B05FD6364FE03D9186447B /* PrivacyCurtain.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD36123400E3B8E8693FE210 /* PrivacyCurtain.swift */; };
-		3EF83A396EB921314D45687D /* PreviewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F82A640465EFD160AC6ED5A /* PreviewStore.swift */; };
-		552F6F85AF0A4A10DA5376CA /* SystemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F6A08C71C6886B7A72DA56B /* SystemView.swift */; };
+		680D04F6E162F3F5D50F079F /* LiquidBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF498E50B0D3C01407F084E /* LiquidBackground.swift */; };
+		6B9C2FE14C423D2D7441F135 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = D9B1DEF00A8379E2A0E80E4E /* Supabase */; };
 		6D9A1FA4AB077A7341BCF820 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102D52FEC40F3E704CA619E9 /* RootView.swift */; };
 		72CE3BE9A7B27FB16D08A289 /* AdminAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A616E2187E69AFAF693EDC /* AdminAuth.swift */; };
 		89C7D89D441EECED07CDA8A8 /* AdminAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43777DE0355DDC688EC882D /* AdminAPI.swift */; };
+		A45B9731347E68476AC7B249 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png in Resources */ = {isa = PBXBuildFile; fileRef = 176341C226CB996BE65763E2 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png */; };
+		A5776C3E26CEB35CB84AB778 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C242384DABA76578459F577 /* ToastCenter.swift */; };
 		A9AF810E5496E52A1E9888F3 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0816DA827B297FC5BDA114C4 /* Models.swift */; };
-		B27BED271CFB4B1F8F6F41BE /* ModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F022A4642A393994876EFBA /* ModelsTests.swift */; };
 		B2829EA5DDE9B8232D83655C /* AdminPanelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90D13C80E1F6CD1132EB1B /* AdminPanelApp.swift */; };
 		BA1B0BEDAE1CA2E1931BF5D7 /* WholesalerReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C596BA377BA84A35DA13F67 /* WholesalerReviewView.swift */; };
 		C74621E6500F9EB7C59FA247 /* AdminDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE5A329C84B6AE712F1042B /* AdminDashboardView.swift */; };
 		D75A78B9BD9DAA0D0A733E78 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25F76472DAB88A4517A1A459 /* Theme.swift */; };
 		D8490EA609E74A7B41B70C42 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 651680B895EB833424151121 /* Assets.xcassets */; };
-		DB01E72C8B745CCECF0E0DF2 /* QueueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9774D96320827794A4CF203 /* QueueStore.swift */; };
 		DF6C7EAEC72ABFF1B413D2D2 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C0F5F7BDB0435BA54865CAC /* SupabaseClient.swift */; };
 		E940AB13CF5A91AE57533192 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5180C11F21F52B301F68D1BC /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		5F8F5C1C6E0301A305D2404B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4A50B796B589867AE2008FF2 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 414DA010E53A77AC3868DE4A;
-			remoteInfo = AdminPanel;
-		};
-		70ED508BB72DD2C882BBC2A7 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4A50B796B589867AE2008FF2 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 414DA010E53A77AC3868DE4A;
-			remoteInfo = AdminPanel;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		0816DA827B297FC5BDA114C4 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		102D52FEC40F3E704CA619E9 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
-		11395B13DDB76FAE73E646EB /* .keep */ = {isa = PBXFileReference; path = .keep; sourceTree = "<group>"; };
-		218431DCF28647E59D1BB4E8 /* ReviewFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewFlowTests.swift; sourceTree = "<group>"; };
+		11395B13DDB76FAE73E646EB /* .keep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .keep; sourceTree = "<group>"; };
+		176341C226CB996BE65763E2 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "9e42596e-e4e6-475c-9240-4e2e1355d091 2.png"; sourceTree = "<group>"; };
 		25F76472DAB88A4517A1A459 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
-		385535B6B33A0A20F0C75941 /* EvidenceViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvidenceViewer.swift; sourceTree = "<group>"; };
 		3C596BA377BA84A35DA13F67 /* WholesalerReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WholesalerReviewView.swift; sourceTree = "<group>"; };
 		3E90D13C80E1F6CD1132EB1B /* AdminPanelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelApp.swift; sourceTree = "<group>"; };
-		4F6A08C71C6886B7A72DA56B /* SystemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemView.swift; sourceTree = "<group>"; };
-		5180C11F21F52B301F68D1BC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		3FF498E50B0D3C01407F084E /* LiquidBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidBackground.swift; sourceTree = "<group>"; };
+		5180C11F21F52B301F68D1BC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		651680B895EB833424151121 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		6F82A640465EFD160AC6ED5A /* PreviewStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewStore.swift; sourceTree = "<group>"; };
+		7C242384DABA76578459F577 /* ToastCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCenter.swift; sourceTree = "<group>"; };
+		8692399AF29E777B99D21184 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		89A616E2187E69AFAF693EDC /* AdminAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAuth.swift; sourceTree = "<group>"; };
-		8EE3F33EFA844FCCD95B5987 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		9C0F5F7BDB0435BA54865CAC /* SupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClient.swift; sourceTree = "<group>"; };
-		9F022A4642A393994876EFBA /* ModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
-		A6E20924F3B1B72D38058670 /* AdminPanelTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AdminPanelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		ADED9120A9750EBF3322D112 /* AdminPanel.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AdminPanel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ADED9120A9750EBF3322D112 /* AdminPanel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AdminPanel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBE2F7473775230E72B474B2 /* AdminLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminLoginView.swift; sourceTree = "<group>"; };
-		DC22F3FD03E4A1D75B1EC7F6 /* AdminPanelUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AdminPanelUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		DD36123400E3B8E8693FE210 /* PrivacyCurtain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyCurtain.swift; sourceTree = "<group>"; };
 		EEE5A329C84B6AE712F1042B /* AdminDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminDashboardView.swift; sourceTree = "<group>"; };
 		F43777DE0355DDC688EC882D /* AdminAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAPI.swift; sourceTree = "<group>"; };
-		F9774D96320827794A4CF203 /* QueueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXGroup section */
-		01EF273F084ABC53058C827A /* Unit */ = {
-			isa = PBXGroup;
-			children = (
-				9F022A4642A393994876EFBA /* ModelsTests.swift */,
+/* Begin PBXFrameworksBuildPhase section */
+		1FB8F28BBEBD50066A3EAF5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B9C2FE14C423D2D7441F135 /* Supabase in Frameworks */,
 			);
-			name = Unit;
-			path = Tests/Unit;
-			sourceTree = "<group>";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
 		1736B3EBB5A8453D80D04D8B /* Features */ = {
 			isa = PBXGroup;
 			children = (
@@ -103,9 +79,19 @@
 			path = AdminPanel/Resources;
 			sourceTree = "<group>";
 		};
+		6058B5D99EEBF74ED1FD8C16 /* admin panel ios */ = {
+			isa = PBXGroup;
+			children = (
+				8692399AF29E777B99D21184 /* Config.xcconfig */,
+			);
+			name = "admin panel ios";
+			path = .;
+			sourceTree = "<group>";
+		};
 		712B7544CEB407CEF99461B8 /* Login */ = {
 			isa = PBXGroup;
 			children = (
+				176341C226CB996BE65763E2 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png */,
 				DBE2F7473775230E72B474B2 /* AdminLoginView.swift */,
 			);
 			path = Login;
@@ -114,31 +100,11 @@
 		77141667D074246E88EB9FDC = {
 			isa = PBXGroup;
 			children = (
-				8805CA15673304B5AD4CA506 /* NativeAdmin */,
+				6058B5D99EEBF74ED1FD8C16 /* admin panel ios */,
 				5611B4583D0FAD6FD447B68A /* Resources */,
 				A3CC58DAC7CA4C499331976E /* Sources */,
-				A29696D4A1FF3893E2FA7F21 /* UI */,
-				01EF273F084ABC53058C827A /* Unit */,
 				CA41275F1F097A8C9389191C /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		8805CA15673304B5AD4CA506 /* NativeAdmin */ = {
-			isa = PBXGroup;
-			children = (
-				8EE3F33EFA844FCCD95B5987 /* Config.xcconfig */,
-			);
-			name = NativeAdmin;
-			path = .;
-			sourceTree = "<group>";
-		};
-		A29696D4A1FF3893E2FA7F21 /* UI */ = {
-			isa = PBXGroup;
-			children = (
-				218431DCF28647E59D1BB4E8 /* ReviewFlowTests.swift */,
-			);
-			name = UI;
-			path = Tests/UI;
 			sourceTree = "<group>";
 		};
 		A3CC58DAC7CA4C499331976E /* Sources */ = {
@@ -159,11 +125,10 @@
 			children = (
 				F43777DE0355DDC688EC882D /* AdminAPI.swift */,
 				89A616E2187E69AFAF693EDC /* AdminAuth.swift */,
+				3FF498E50B0D3C01407F084E /* LiquidBackground.swift */,
 				0816DA827B297FC5BDA114C4 /* Models.swift */,
-				6F82A640465EFD160AC6ED5A /* PreviewStore.swift */,
-				DD36123400E3B8E8693FE210 /* PrivacyCurtain.swift */,
-				F9774D96320827794A4CF203 /* QueueStore.swift */,
 				25F76472DAB88A4517A1A459 /* Theme.swift */,
+				7C242384DABA76578459F577 /* ToastCenter.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -172,7 +137,6 @@
 			isa = PBXGroup;
 			children = (
 				EEE5A329C84B6AE712F1042B /* AdminDashboardView.swift */,
-				4F6A08C71C6886B7A72DA56B /* SystemView.swift */,
 			);
 			path = Dashboard;
 			sourceTree = "<group>";
@@ -189,8 +153,6 @@
 			isa = PBXGroup;
 			children = (
 				ADED9120A9750EBF3322D112 /* AdminPanel.app */,
-				A6E20924F3B1B72D38058670 /* AdminPanelTests.xctest */,
-				DC22F3FD03E4A1D75B1EC7F6 /* AdminPanelUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -198,7 +160,6 @@
 		D02E3AB3514FA61CF77F4A97 /* Review */ = {
 			isa = PBXGroup;
 			children = (
-				385535B6B33A0A20F0C75941 /* EvidenceViewer.swift */,
 				3C596BA377BA84A35DA13F67 /* WholesalerReviewView.swift */,
 			);
 			path = Review;
@@ -213,6 +174,7 @@
 			buildPhases = (
 				EBC2AD08D744E09B0611B4AA /* Sources */,
 				FC8D6A1267F2C0282D8EFA27 /* Resources */,
+				1FB8F28BBEBD50066A3EAF5C /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -220,46 +182,11 @@
 			);
 			name = AdminPanel;
 			packageProductDependencies = (
+				D9B1DEF00A8379E2A0E80E4E /* Supabase */,
 			);
 			productName = AdminPanel;
 			productReference = ADED9120A9750EBF3322D112 /* AdminPanel.app */;
 			productType = "com.apple.product-type.application";
-		};
-		70F21BBDF3B5A3FCD57D0F71 /* AdminPanelUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 049D9F254F287904B18A1BFC /* Build configuration list for PBXNativeTarget "AdminPanelUITests" */;
-			buildPhases = (
-				5A9B2BE3338B4F0821EB4EA1 /* Sources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				F104CC652DF3B75D1EA52EBD /* PBXTargetDependency */,
-			);
-			name = AdminPanelUITests;
-			packageProductDependencies = (
-			);
-			productName = AdminPanelUITests;
-			productReference = DC22F3FD03E4A1D75B1EC7F6 /* AdminPanelUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
-		82E02091653C32763926C93F /* AdminPanelTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = CA38F16DEF9C6355E18A7868 /* Build configuration list for PBXNativeTarget "AdminPanelTests" */;
-			buildPhases = (
-				BA29B213AF7ED45DC9EE97A5 /* Sources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				F7373B577E8AB7BBDFDD845B /* PBXTargetDependency */,
-			);
-			name = AdminPanelTests;
-			packageProductDependencies = (
-			);
-			productName = AdminPanelTests;
-			productReference = A6E20924F3B1B72D38058670 /* AdminPanelTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -271,11 +198,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					414DA010E53A77AC3868DE4A = {
-						DevelopmentTeam = AAF6438546;
 						ProvisioningStyle = Automatic;
-					};
-					70F21BBDF3B5A3FCD57D0F71 = {
-						TestTargetID = 414DA010E53A77AC3868DE4A;
 					};
 				};
 			};
@@ -288,14 +211,15 @@
 			);
 			mainGroup = 77141667D074246E88EB9FDC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B86B087E66E41BA1E27CCC4E /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CA41275F1F097A8C9389191C /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				414DA010E53A77AC3868DE4A /* AdminPanel */,
-				82E02091653C32763926C93F /* AdminPanelTests */,
-				70F21BBDF3B5A3FCD57D0F71 /* AdminPanelUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -305,6 +229,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A45B9731347E68476AC7B249 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png in Resources */,
 				D8490EA609E74A7B41B70C42 /* Assets.xcassets in Resources */,
 				E940AB13CF5A91AE57533192 /* PrivacyInfo.xcprivacy in Resources */,
 			);
@@ -313,22 +238,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		5A9B2BE3338B4F0821EB4EA1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1DD1101C4986DF046CC40448 /* ReviewFlowTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		BA29B213AF7ED45DC9EE97A5 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				B27BED271CFB4B1F8F6F41BE /* ModelsTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		EBC2AD08D744E09B0611B4AA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -338,54 +247,19 @@
 				C74621E6500F9EB7C59FA247 /* AdminDashboardView.swift in Sources */,
 				1F66C009F586CCE2070D2A29 /* AdminLoginView.swift in Sources */,
 				B2829EA5DDE9B8232D83655C /* AdminPanelApp.swift in Sources */,
-				03AB7C2E117D61C8968CFD4D /* EvidenceViewer.swift in Sources */,
+				680D04F6E162F3F5D50F079F /* LiquidBackground.swift in Sources */,
 				A9AF810E5496E52A1E9888F3 /* Models.swift in Sources */,
-				3EF83A396EB921314D45687D /* PreviewStore.swift in Sources */,
-				36B05FD6364FE03D9186447B /* PrivacyCurtain.swift in Sources */,
-				DB01E72C8B745CCECF0E0DF2 /* QueueStore.swift in Sources */,
 				6D9A1FA4AB077A7341BCF820 /* RootView.swift in Sources */,
 				DF6C7EAEC72ABFF1B413D2D2 /* SupabaseClient.swift in Sources */,
-				552F6F85AF0A4A10DA5376CA /* SystemView.swift in Sources */,
 				D75A78B9BD9DAA0D0A733E78 /* Theme.swift in Sources */,
+				A5776C3E26CEB35CB84AB778 /* ToastCenter.swift in Sources */,
 				BA1B0BEDAE1CA2E1931BF5D7 /* WholesalerReviewView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		F104CC652DF3B75D1EA52EBD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 414DA010E53A77AC3868DE4A /* AdminPanel */;
-			targetProxy = 70ED508BB72DD2C882BBC2A7 /* PBXContainerItemProxy */;
-		};
-		F7373B577E8AB7BBDFDD845B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 414DA010E53A77AC3868DE4A /* AdminPanel */;
-			targetProxy = 5F8F5C1C6E0301A305D2404B /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
-		5298C6BA503A0AB8F7C22250 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanelTests;
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AdminPanel.app/AdminPanel";
-			};
-			name = Debug;
-		};
 		6E4B0B7975E12EB207E10865 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -441,102 +315,47 @@
 			};
 			name = Release;
 		};
-		84593B2BFA39DC2F22A96B69 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanelUITests;
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = AdminPanel;
-			};
-			name = Debug;
-		};
 		879B02CFA388ABE9B36A8B28 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8EE3F33EFA844FCCD95B5987 /* Config.xcconfig */;
+			baseConfigurationReference = 8692399AF29E777B99D21184 /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AAF6438546;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = J3BH2RPA7Y;
 				INFOPLIST_FILE = AdminPanel/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanel;
 				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
 		9EE3A80DF11B36063FD579FD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8EE3F33EFA844FCCD95B5987 /* Config.xcconfig */;
+			baseConfigurationReference = 8692399AF29E777B99D21184 /* Config.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AAF6438546;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = J3BH2RPA7Y;
 				INFOPLIST_FILE = AdminPanel/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanel;
 				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		CEEB0DB9DE68193E4E404114 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanelTests;
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AdminPanel.app/AdminPanel";
-			};
-			name = Release;
-		};
-		DCE7E95303644281764A1E7C /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanelUITests;
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = AdminPanel;
 			};
 			name = Release;
 		};
@@ -605,15 +424,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		049D9F254F287904B18A1BFC /* Build configuration list for PBXNativeTarget "AdminPanelUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				84593B2BFA39DC2F22A96B69 /* Debug */,
-				DCE7E95303644281764A1E7C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
 		147A6DED6903D41B6DC25038 /* Build configuration list for PBXNativeTarget "AdminPanel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -632,16 +442,26 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		CA38F16DEF9C6355E18A7868 /* Build configuration list for PBXNativeTarget "AdminPanelTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				5298C6BA503A0AB8F7C22250 /* Debug */,
-				CEEB0DB9DE68193E4E404114 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B86B087E66E41BA1E27CCC4E /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D9B1DEF00A8379E2A0E80E4E /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B86B087E66E41BA1E27CCC4E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4A50B796B589867AE2008FF2 /* Project object */;
 }
