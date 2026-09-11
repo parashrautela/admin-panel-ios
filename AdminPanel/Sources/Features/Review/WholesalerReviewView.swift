@@ -6,7 +6,9 @@ struct WholesalerReviewView: View {
     let submissionId: String
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var toast: ToastCenter
+    private var isCompact: Bool { horizontalSizeClass == .compact }
 
     @State private var submission: Submission?
     @State private var loading = true
@@ -82,14 +84,27 @@ struct WholesalerReviewView: View {
 
     private func content(_ submission: Submission) -> some View {
         ScrollView {
-            HStack(alignment: .top, spacing: 40) {
-                leftColumn(submission)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                actionsPanel(submission)
-                    .frame(width: 300)
+            Group {
+                // A fixed 300pt actions panel beside the review content
+                // doesn't leave enough room for either on phone width —
+                // stack them instead, actions below so the documents being
+                // reviewed stay the first thing on screen.
+                if isCompact {
+                    VStack(alignment: .leading, spacing: 32) {
+                        leftColumn(submission)
+                        actionsPanel(submission)
+                    }
+                } else {
+                    HStack(alignment: .top, spacing: 40) {
+                        leftColumn(submission)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        actionsPanel(submission)
+                            .frame(width: 300)
+                    }
+                }
             }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 40)
+            .padding(.horizontal, isCompact ? 16 : 32)
+            .padding(.vertical, isCompact ? 24 : 40)
             .frame(maxWidth: 1280)
             .frame(maxWidth: .infinity)
         }
@@ -143,7 +158,7 @@ struct WholesalerReviewView: View {
         sectionCard("Personal Details") {
             VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 16) {
-                    HStack(alignment: .top, spacing: 24) {
+                    adaptiveRow(spacing: 24) {
                         infoField("FULL NAME", submission.displayName)
                         infoField("AADHAAR NUMBER", submission.aadhar_number ?? "N/A")
                     }
@@ -154,7 +169,7 @@ struct WholesalerReviewView: View {
                 .background(Color.gray50)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                HStack(alignment: .top, spacing: 20) {
+                adaptiveRow(spacing: 20) {
                     DocumentCard(url: submission.aadhaar_front_url, label: "Aadhaar Front")
                     DocumentCard(url: submission.aadhaar_back_url, label: "Aadhaar Back")
                 }
@@ -162,11 +177,23 @@ struct WholesalerReviewView: View {
         }
     }
 
+    // Side-by-side pairs (info fields, document cards) work fine down to
+    // iPad width, but two flexible-width columns on a phone squeeze both
+    // below a usable width — stack them instead.
+    @ViewBuilder
+    private func adaptiveRow(spacing: CGFloat, @ViewBuilder content: () -> some View) -> some View {
+        if isCompact {
+            VStack(alignment: .leading, spacing: spacing, content: content)
+        } else {
+            HStack(alignment: .top, spacing: spacing, content: content)
+        }
+    }
+
     private func businessDetails(_ submission: Submission) -> some View {
         sectionCard("Business Details") {
             VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 16) {
-                    HStack(alignment: .top, spacing: 24) {
+                    adaptiveRow(spacing: 24) {
                         infoField("BUSINESS NAME", submission.business_name ?? "—")
                         infoField("STATE", submission.state ?? "—")
                     }
@@ -221,7 +248,7 @@ struct WholesalerReviewView: View {
 
     private func verificationDocuments(_ submission: Submission) -> some View {
         sectionCard("Verification Documents") {
-            HStack(alignment: .top, spacing: 20) {
+            adaptiveRow(spacing: 20) {
                 DocumentCard(url: submission.pan_card_url, label: "PAN Card")
                 DocumentCard(url: submission.gst_certificate_url, label: "GST Certificate")
             }

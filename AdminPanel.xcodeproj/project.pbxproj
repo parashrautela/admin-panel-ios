@@ -13,23 +13,29 @@
 		6D9A1FA4AB077A7341BCF820 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102D52FEC40F3E704CA619E9 /* RootView.swift */; };
 		72CE3BE9A7B27FB16D08A289 /* AdminAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A616E2187E69AFAF693EDC /* AdminAuth.swift */; };
 		89C7D89D441EECED07CDA8A8 /* AdminAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43777DE0355DDC688EC882D /* AdminAPI.swift */; };
+		A45B9731347E68476AC7B249 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png in Resources */ = {isa = PBXBuildFile; fileRef = 176341C226CB996BE65763E2 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png */; };
 		A5776C3E26CEB35CB84AB778 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C242384DABA76578459F577 /* ToastCenter.swift */; };
 		A9AF810E5496E52A1E9888F3 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0816DA827B297FC5BDA114C4 /* Models.swift */; };
 		B2829EA5DDE9B8232D83655C /* AdminPanelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E90D13C80E1F6CD1132EB1B /* AdminPanelApp.swift */; };
 		BA1B0BEDAE1CA2E1931BF5D7 /* WholesalerReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C596BA377BA84A35DA13F67 /* WholesalerReviewView.swift */; };
 		C74621E6500F9EB7C59FA247 /* AdminDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEE5A329C84B6AE712F1042B /* AdminDashboardView.swift */; };
 		D75A78B9BD9DAA0D0A733E78 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25F76472DAB88A4517A1A459 /* Theme.swift */; };
+		D8490EA609E74A7B41B70C42 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 651680B895EB833424151121 /* Assets.xcassets */; };
 		DF6C7EAEC72ABFF1B413D2D2 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C0F5F7BDB0435BA54865CAC /* SupabaseClient.swift */; };
+		E940AB13CF5A91AE57533192 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5180C11F21F52B301F68D1BC /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0816DA827B297FC5BDA114C4 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		102D52FEC40F3E704CA619E9 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		11395B13DDB76FAE73E646EB /* .keep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .keep; sourceTree = "<group>"; };
+		176341C226CB996BE65763E2 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "9e42596e-e4e6-475c-9240-4e2e1355d091 2.png"; sourceTree = "<group>"; };
 		25F76472DAB88A4517A1A459 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		3C596BA377BA84A35DA13F67 /* WholesalerReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WholesalerReviewView.swift; sourceTree = "<group>"; };
 		3E90D13C80E1F6CD1132EB1B /* AdminPanelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelApp.swift; sourceTree = "<group>"; };
 		3FF498E50B0D3C01407F084E /* LiquidBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidBackground.swift; sourceTree = "<group>"; };
+		5180C11F21F52B301F68D1BC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		651680B895EB833424151121 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7C242384DABA76578459F577 /* ToastCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCenter.swift; sourceTree = "<group>"; };
 		8692399AF29E777B99D21184 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		89A616E2187E69AFAF693EDC /* AdminAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAuth.swift; sourceTree = "<group>"; };
@@ -66,6 +72,8 @@
 			isa = PBXGroup;
 			children = (
 				11395B13DDB76FAE73E646EB /* .keep */,
+				651680B895EB833424151121 /* Assets.xcassets */,
+				5180C11F21F52B301F68D1BC /* PrivacyInfo.xcprivacy */,
 			);
 			name = Resources;
 			path = AdminPanel/Resources;
@@ -83,6 +91,7 @@
 		712B7544CEB407CEF99461B8 /* Login */ = {
 			isa = PBXGroup;
 			children = (
+				176341C226CB996BE65763E2 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png */,
 				DBE2F7473775230E72B474B2 /* AdminLoginView.swift */,
 			);
 			path = Login;
@@ -164,6 +173,7 @@
 			buildConfigurationList = 147A6DED6903D41B6DC25038 /* Build configuration list for PBXNativeTarget "AdminPanel" */;
 			buildPhases = (
 				EBC2AD08D744E09B0611B4AA /* Sources */,
+				FC8D6A1267F2C0282D8EFA27 /* Resources */,
 				1FB8F28BBEBD50066A3EAF5C /* Frameworks */,
 			);
 			buildRules = (
@@ -186,6 +196,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					414DA010E53A77AC3868DE4A = {
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 6D089DCE3BD466DDE95FA5ED /* Build configuration list for PBXProject "AdminPanel" */;
 			developmentRegion = en;
@@ -208,6 +223,19 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FC8D6A1267F2C0282D8EFA27 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A45B9731347E68476AC7B249 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png in Resources */,
+				D8490EA609E74A7B41B70C42 /* Assets.xcassets in Resources */,
+				E940AB13CF5A91AE57533192 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		EBC2AD08D744E09B0611B4AA /* Sources */ = {
@@ -293,13 +321,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = AAF6438546;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = J3BH2RPA7Y;
 				INFOPLIST_FILE = AdminPanel/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanel;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -312,13 +343,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = AAF6438546;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = J3BH2RPA7Y;
 				INFOPLIST_FILE = AdminPanel/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jewelindia.AdminPanel;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";

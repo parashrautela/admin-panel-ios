@@ -1,19 +1,24 @@
 import Foundation
 import Combine
 
-// Mirrors the web's AdminProtected gate: a simple password check that lasts
-// for the app session only (the web equivalent uses sessionStorage).
+// Mirrors the web's AdminProtected gate: a password check that lasts for the
+// app session only (the web equivalent uses sessionStorage). The password
+// itself is verified server-side by AdminAPI.verifyPassword — this class
+// never knows or stores a "correct" value locally.
 @MainActor
 final class AdminAuth: ObservableObject {
     @Published var isAuthenticated = false
 
-    private let adminPassword =
-        (Bundle.main.object(forInfoDictionaryKey: "ADMIN_PASSWORD") as? String)
-            .flatMap { $0.isEmpty ? nil : $0 } ?? "admin123"
-
-    /// Returns true when the password matches, mirroring the web's handleLogin.
-    func login(password: String) -> Bool {
-        guard password == adminPassword else { return false }
+    /// Returns true when the password is accepted by the server, mirroring
+    /// the web's handleLogin. Throws (rather than returning false) on
+    /// network/transport failures so the login screen can show why.
+    func login(password: String) async throws -> Bool {
+        do {
+            try await AdminAPI.verifyPassword(password)
+        } catch let error as AdminAPIError where error.message.lowercased().contains("unauthorized") {
+            return false
+        }
+        AdminAPI.adminPassword = password
         isAuthenticated = true
         return true
     }

@@ -33,6 +33,14 @@ extension Color {
     static let red100 = Color(hex: 0xFEE2E2)
     static let red500 = Color(hex: 0xEF4444)
     static let red900 = Color(hex: 0x7F1D1D)
+
+    // Dark navy login panel (Figma redesign, 2026-09-10). Approximated from
+    // a PNG export, not exact design tokens — nudge these if the real
+    // Figma file becomes reachable later.
+    static let loginNavyTop = Color(hex: 0x090C16)
+    static let loginNavyBottom = Color(hex: 0x1B3D74)
+    static let loginMutedText = Color(hex: 0xA7B0C4)
+    static let loginButtonFill = Color(hex: 0x8B93A6)
 }
 
 // Card container matching the web's `rounded-lg shadow-sm border border-gray-100`.

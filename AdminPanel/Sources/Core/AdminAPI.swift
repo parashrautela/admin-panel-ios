@@ -1,29 +1,50 @@
 import Foundation
 import Supabase
 
-// Mirrors src/lib/adminApi.ts from the web admin panel.
+// A readable error message from an Edge Function's `{ error: "..." }` body,
+// so callers (toasts, the login screen) show something meaningful instead of
+// FunctionsError's generic "non-2xx status code" text.
+struct AdminAPIError: LocalizedError {
+    let message: String
+    var errorDescription: String? { message }
+}
+
+// Mirrors src/lib/adminApi.ts from the web admin panel, but talks to
+// password-gated Edge Functions instead of the database directly — this app
+// never holds the Supabase service-role key (see SupabaseClient.swift).
 enum AdminAPI {
+
+    // Set once by AdminAuth.login on success; attached to every call below
+    // as the x-admin-password header. In-memory only, cleared on relaunch —
+    // mirrors the web's sessionStorage-scoped login.
+    static var adminPassword: String?
+
+    // MARK: - Auth
+
+    static func verifyPassword(_ password: String) async throws {
+        do {
+            try await supabase.functions.invoke(
+                "admin-verify-password",
+                options: FunctionInvokeOptions(headers: ["x-admin-password": password])
+            )
+        } catch {
+            throw mapError(error)
+        }
+    }
 
     // MARK: - Reads
 
     static func fetchStatusCounts(entity: ReviewEntity) async throws -> [WholesalerStatus: Int] {
-        try await withThrowingTaskGroup(of: (WholesalerStatus, Int).self) { group in
-            for status in WholesalerStatus.allCases {
-                group.addTask {
-                    let response = try await supabase
-                        .from(entity.table)
-                        .select("*", head: true, count: .exact)
-                        .eq("verification_status", value: status.rawValue)
-                        .execute()
-                    return (status, response.count ?? 0)
-                }
-            }
-            var counts: [WholesalerStatus: Int] = [:]
-            for try await (status, count) in group {
-                counts[status] = count
-            }
-            return counts
+        struct Body: Encodable { let table: String }
+        let raw: [String: Int] = try await invoke(
+            "admin-fetch-status-counts",
+            body: Body(table: entity.table)
+        )
+        var counts: [WholesalerStatus: Int] = [:]
+        for status in WholesalerStatus.allCases {
+            counts[status] = raw[status.rawValue] ?? 0
         }
+        return counts
     }
 
     static func fetchSubmissions(
@@ -31,95 +52,38 @@ enum AdminAPI {
         statusFilter: WholesalerStatus?,
         searchQuery: String
     ) async throws -> [Submission] {
-        var query = supabase
-            .from(entity.table)
-            .select("id, full_name, business_name, city, state, created_at, verification_status")
-
-        if let statusFilter {
-            query = query.eq("verification_status", value: statusFilter.rawValue)
+        struct Body: Encodable {
+            let table: String
+            let statusFilter: String?
+            let searchQuery: String
         }
-
-        let search = searchQuery.trimmingCharacters(in: .whitespaces)
-        if !search.isEmpty {
-            query = query.or("full_name.ilike.%\(search)%,business_name.ilike.%\(search)%")
-        }
-
-        return try await query
-            .order("created_at", ascending: false)
-            .execute()
-            .value
+        return try await invoke(
+            "admin-fetch-submissions",
+            body: Body(table: entity.table, statusFilter: statusFilter?.rawValue, searchQuery: searchQuery)
+        )
     }
 
     static func fetchSubmissionDetail(entity: ReviewEntity, id: String) async throws -> Submission {
-        try await supabase
-            .from(entity.table)
-            .select()
-            .eq("id", value: id)
-            .single()
-            .execute()
-            .value
+        struct Body: Encodable { let table: String; let id: String }
+        return try await invoke(
+            "admin-fetch-submission-detail",
+            body: Body(table: entity.table, id: id)
+        )
     }
 
     // MARK: - Admin actions (same payloads as the web app)
 
-    private struct VerifyPayload: Encodable {
-        let verification_status: String
-        let notification_message: String
-        let notified: Bool
-    }
-
-    private struct RejectPayload: Encodable {
-        let verification_status: String
-        let rejection_reason: String
-        let notification_message: String
-        let notified: Bool
-    }
-
-    private struct ResubmissionPayload: Encodable {
-        let verification_status: String
-        let rejected_documents: [String]
-        let rejection_reason: String
-        let notification_message: String
-        let notified: Bool
-    }
-
-    private struct OnHoldPayload: Encodable {
-        let verification_status: String
-        let admin_notes: String
-    }
-
-    private struct BanPayload: Encodable {
-        let verification_status: String
-        let notification_message: String
-    }
-
-    private struct NotesPayload: Encodable {
-        let admin_notes: String
-    }
-
-    private static func update(_ entity: ReviewEntity, _ id: String, _ payload: some Encodable) async throws {
-        try await supabase
-            .from(entity.table)
-            .update(payload)
-            .eq("id", value: id)
-            .execute()
-    }
-
     static func verifySubmission(entity: ReviewEntity, id: String) async throws {
-        try await update(entity, id, VerifyPayload(
-            verification_status: "verified",
-            notification_message: "You're verified! You can now access your full dashboard.",
-            notified: false
-        ))
+        struct Body: Encodable { let table: String; let id: String }
+        try await invokeVoid("admin-verify-submission", body: Body(table: entity.table, id: id))
     }
 
     static func rejectSubmission(entity: ReviewEntity, id: String, reason: String) async throws {
-        try await update(entity, id, RejectPayload(
-            verification_status: "rejected",
-            rejection_reason: reason.isEmpty ? "Review failed." : reason,
-            notification_message: "Verification failed. \(reason.isEmpty ? "Contact support." : reason)",
-            notified: false
-        ))
+        struct Body: Encodable { let table: String; let id: String; let reason: String }
+        try await invokeVoid(
+            "admin-reject-submission",
+            body: Body(table: entity.table, id: id, reason: reason.isEmpty ? "Review failed." : reason)
+        )
     }
 
     static func requestResubmission(
@@ -128,30 +92,66 @@ enum AdminAPI {
         documents: [String],
         reason: String
     ) async throws {
-        try await update(entity, id, ResubmissionPayload(
-            verification_status: "resubmission_required",
-            rejected_documents: documents,
-            rejection_reason: reason.isEmpty ? "Please resubmit your documents." : reason,
-            notification_message: "Some documents need to be resubmitted.",
-            notified: false
-        ))
+        struct Body: Encodable { let table: String; let id: String; let documents: [String]; let reason: String }
+        try await invokeVoid(
+            "admin-request-resubmission",
+            body: Body(table: entity.table, id: id, documents: documents, reason: reason)
+        )
     }
 
     static func putOnHold(entity: ReviewEntity, id: String, notes: String) async throws {
-        try await update(entity, id, OnHoldPayload(
-            verification_status: "on_hold",
-            admin_notes: notes
-        ))
+        struct Body: Encodable { let table: String; let id: String; let notes: String }
+        try await invokeVoid("admin-hold-submission", body: Body(table: entity.table, id: id, notes: notes))
     }
 
     static func banSubmission(entity: ReviewEntity, id: String) async throws {
-        try await update(entity, id, BanPayload(
-            verification_status: "banned",
-            notification_message: "Your account has been suspended."
-        ))
+        struct Body: Encodable { let table: String; let id: String }
+        try await invokeVoid("admin-ban-submission", body: Body(table: entity.table, id: id))
     }
 
     static func saveNotes(entity: ReviewEntity, id: String, notes: String) async throws {
-        try await update(entity, id, NotesPayload(admin_notes: notes))
+        struct Body: Encodable { let table: String; let id: String; let notes: String }
+        try await invokeVoid("admin-save-notes", body: Body(table: entity.table, id: id, notes: notes))
+    }
+
+    // MARK: - Transport
+
+    private static var passwordHeader: [String: String] {
+        guard let adminPassword else { return [:] }
+        return ["x-admin-password": adminPassword]
+    }
+
+    private static func invoke<Body: Encodable, Response: Decodable>(
+        _ function: String,
+        body: Body
+    ) async throws -> Response {
+        do {
+            return try await supabase.functions.invoke(
+                function,
+                options: FunctionInvokeOptions(headers: passwordHeader, body: body)
+            )
+        } catch {
+            throw mapError(error)
+        }
+    }
+
+    private static func invokeVoid<Body: Encodable>(_ function: String, body: Body) async throws {
+        do {
+            try await supabase.functions.invoke(
+                function,
+                options: FunctionInvokeOptions(headers: passwordHeader, body: body)
+            )
+        } catch {
+            throw mapError(error)
+        }
+    }
+
+    private static func mapError(_ error: Error) -> Error {
+        guard case FunctionsError.httpError(_, let data) = error,
+              let body = try? JSONDecoder().decode([String: String].self, from: data),
+              let message = body["error"] else {
+            return error
+        }
+        return AdminAPIError(message: message)
     }
 }
