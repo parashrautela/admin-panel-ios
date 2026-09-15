@@ -111,19 +111,25 @@ struct AdminDashboardView: View {
                     .foregroundColor(.gray900)
             }
             Spacer()
-            HStack(spacing: 16) {
-                Text("Admin User")
-                    .font(.system(size: 14))
-                    .foregroundColor(.gray600)
-                Circle()
-                    .fill(Color.black)
-                    .frame(width: 36, height: 36)
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white)
-                    )
+            NavigationLink {
+                AdminProfileView()
+            } label: {
+                HStack(spacing: 16) {
+                    Text("Admin User")
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray600)
+                    Circle()
+                        .fill(Color.black)
+                        .frame(width: 36, height: 36)
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                        )
+                }
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open admin profile")
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)

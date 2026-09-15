@@ -26,7 +26,7 @@ targets:
         # Kept in sync with the generated project — an empty value here wipes
         # the team/signing style the next time anyone runs xcodegen, which
         # silently breaks device builds and Archive.
-        DEVELOPMENT_TEAM: AAF6438546
+        DEVELOPMENT_TEAM: J3BH2RPA7Y
         CODE_SIGN_STYLE: Automatic
         MARKETING_VERSION: "1.0"
         # Bump this by 1 before every new Archive you intend to upload —

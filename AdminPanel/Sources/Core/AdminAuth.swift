@@ -22,4 +22,9 @@ final class AdminAuth: ObservableObject {
         isAuthenticated = true
         return true
     }
+
+    func logout() {
+        AdminAPI.adminPassword = nil
+        isAuthenticated = false
+    }
 }
