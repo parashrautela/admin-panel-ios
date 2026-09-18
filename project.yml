@@ -29,10 +29,13 @@ targets:
         DEVELOPMENT_TEAM: J3BH2RPA7Y
         CODE_SIGN_STYLE: Automatic
         MARKETING_VERSION: "1.0"
-        # Bump this by 1 before every new Archive you intend to upload —
-        # App Store Connect rejects a re-upload whose build number isn't
-        # strictly higher than the last one it received (last upload was 2).
-        CURRENT_PROJECT_VERSION: "3"
+        # Exporting with method `app-store-connect` sets the build number
+        # itself: Xcode asks App Store Connect for the latest build of this
+        # MARKETING_VERSION and stamps the next one, ignoring the value here.
+        # So this is only the floor for local/device builds — keep it in sync
+        # with the last upload rather than trusting it to drive one.
+        # 1.0 (8) uploaded 2026-09-18; builds 1-7 are spent.
+        CURRENT_PROJECT_VERSION: "8"
     info:
       path: AdminPanel/Info.plist
       properties:
