@@ -34,8 +34,8 @@ targets:
         # MARKETING_VERSION and stamps the next one, ignoring the value here.
         # So this is only the floor for local/device builds — keep it in sync
         # with the last upload rather than trusting it to drive one.
-        # 1.0 (8) uploaded 2026-09-18; builds 1-7 are spent.
-        CURRENT_PROJECT_VERSION: "8"
+        # 1.0 (9) uploaded 2026-09-19; builds 1-8 are spent.
+        CURRENT_PROJECT_VERSION: "9"
     info:
       path: AdminPanel/Info.plist
       properties:
