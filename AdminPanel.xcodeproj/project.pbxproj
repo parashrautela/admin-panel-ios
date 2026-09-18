@@ -12,6 +12,7 @@
 		6B9C2FE14C423D2D7441F135 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = D9B1DEF00A8379E2A0E80E4E /* Supabase */; };
 		6D9A1FA4AB077A7341BCF820 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102D52FEC40F3E704CA619E9 /* RootView.swift */; };
 		72CE3BE9A7B27FB16D08A289 /* AdminAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A616E2187E69AFAF693EDC /* AdminAuth.swift */; };
+		8815AA7B0B8D035985F4BE75 /* DocumentViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92C0DFE2F449FD281E1C70C /* DocumentViewer.swift */; };
 		89C7D89D441EECED07CDA8A8 /* AdminAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43777DE0355DDC688EC882D /* AdminAPI.swift */; };
 		A45B9731347E68476AC7B249 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png in Resources */ = {isa = PBXBuildFile; fileRef = 176341C226CB996BE65763E2 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png */; };
 		A5776C3E26CEB35CB84AB778 /* ToastCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C242384DABA76578459F577 /* ToastCenter.swift */; };
@@ -41,6 +42,7 @@
 		8692399AF29E777B99D21184 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		89A616E2187E69AFAF693EDC /* AdminAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAuth.swift; sourceTree = "<group>"; };
 		9C0F5F7BDB0435BA54865CAC /* SupabaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClient.swift; sourceTree = "<group>"; };
+		A92C0DFE2F449FD281E1C70C /* DocumentViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentViewer.swift; sourceTree = "<group>"; };
 		ADED9120A9750EBF3322D112 /* AdminPanel.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AdminPanel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBE2F7473775230E72B474B2 /* AdminLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminLoginView.swift; sourceTree = "<group>"; };
 		EEE5A329C84B6AE712F1042B /* AdminDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminDashboardView.swift; sourceTree = "<group>"; };
@@ -171,6 +173,7 @@
 		D02E3AB3514FA61CF77F4A97 /* Review */ = {
 			isa = PBXGroup;
 			children = (
+				A92C0DFE2F449FD281E1C70C /* DocumentViewer.swift */,
 				3C596BA377BA84A35DA13F67 /* WholesalerReviewView.swift */,
 			);
 			path = Review;
@@ -260,6 +263,7 @@
 				1F66C009F586CCE2070D2A29 /* AdminLoginView.swift in Sources */,
 				B2829EA5DDE9B8232D83655C /* AdminPanelApp.swift in Sources */,
 				B73A016F6E32957775F46F92 /* AdminProfileView.swift in Sources */,
+				8815AA7B0B8D035985F4BE75 /* DocumentViewer.swift in Sources */,
 				680D04F6E162F3F5D50F079F /* LiquidBackground.swift in Sources */,
 				A9AF810E5496E52A1E9888F3 /* Models.swift in Sources */,
 				6D9A1FA4AB077A7341BCF820 /* RootView.swift in Sources */,

@@ -1,6 +1,8 @@
 import SwiftUI
+import UIKit
 
-// Mirrors the web WholesalerReview screen.
+// Mirrors the web WholesalerReview screen, with the documents laid out for a
+// touch screen: every file is shown whole and opens full screen in the app.
 struct WholesalerReviewView: View {
     let entity: ReviewEntity
     let submissionId: String
@@ -23,6 +25,7 @@ struct WholesalerReviewView: View {
     @State private var rejectionNotes = ""
     @State private var adminNotes = ""
     @State private var actionLoading = false
+    @State private var viewerRequest: DocumentViewerRequest?
 
     private let resubmissionDocs = ["Aadhaar Front", "Aadhaar Back", "PAN Card", "GST Certificate"]
     private let rejectionReasons = [
@@ -62,6 +65,9 @@ struct WholesalerReviewView: View {
             }
             loading = false
         }
+        .fullScreenCover(item: $viewerRequest) { request in
+            DocumentViewer(documents: request.documents, startIndex: request.startIndex)
+        }
         .overlay {
             if showBanModal, let submission {
                 banModal(submission)
@@ -80,189 +86,382 @@ struct WholesalerReviewView: View {
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - Documents
+
+    /// The four files an admin is here to check, in the order they're asked
+    /// for during onboarding. The business logo is deliberately not one of
+    /// them — it's branding, not evidence, so it sits in the header instead.
+    private func documents(_ submission: Submission) -> [ReviewDocument] {
+        [
+            ReviewDocument(label: "Aadhaar Front", urlString: submission.aadhaar_front_url),
+            ReviewDocument(label: "Aadhaar Back", urlString: submission.aadhaar_back_url),
+            ReviewDocument(label: "PAN Card", urlString: submission.pan_card_url),
+            ReviewDocument(label: "GST Certificate", urlString: submission.gst_certificate_url),
+        ]
+    }
+
+    /// Opens the viewer on one document, with every other provided document
+    /// swipeable from it — an admin comparing the two sides of an Aadhaar card
+    /// shouldn't have to close and reopen.
+    private func openViewer(_ document: ReviewDocument, in all: [ReviewDocument]) {
+        let provided = all.filter(\.isProvided)
+        let index = provided.firstIndex(of: document) ?? 0
+        viewerRequest = DocumentViewerRequest(documents: provided, startIndex: index)
+    }
+
     // MARK: - Main layout
 
     private func content(_ submission: Submission) -> some View {
         ScrollView {
-            Group {
-                // A fixed 300pt actions panel beside the review content
+            VStack(alignment: .leading, spacing: isCompact ? 20 : 24) {
+                backButton
+                header(submission)
+
+                // A fixed 320pt actions panel beside the review content
                 // doesn't leave enough room for either on phone width —
                 // stack them instead, actions below so the documents being
                 // reviewed stay the first thing on screen.
                 if isCompact {
-                    VStack(alignment: .leading, spacing: 32) {
-                        leftColumn(submission)
-                        actionsPanel(submission)
-                    }
+                    reviewColumn(submission)
+                    actionsPanel(submission)
                 } else {
-                    HStack(alignment: .top, spacing: 40) {
-                        leftColumn(submission)
+                    HStack(alignment: .top, spacing: 32) {
+                        reviewColumn(submission)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         actionsPanel(submission)
-                            .frame(width: 300)
+                            .frame(width: 320)
                     }
                 }
             }
             .padding(.horizontal, isCompact ? 16 : 32)
-            .padding(.vertical, isCompact ? 24 : 40)
+            .padding(.vertical, isCompact ? 20 : 40)
             .frame(maxWidth: 1280)
             .frame(maxWidth: .infinity)
         }
     }
 
-    private func leftColumn(_ submission: Submission) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button {
-                dismiss()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 14, weight: .medium))
-                    Text("Back")
-                        .font(.system(size: 15, weight: .medium))
-                }
-                .foregroundColor(.black)
-            }
-            .buttonStyle(.plain)
-            .padding(.bottom, 24)
+    /// Claimed details first, documents directly under them: the review is a
+    /// comparison of the two, so they belong within a scroll of each other.
+    private func reviewColumn(_ submission: Submission) -> some View {
+        VStack(alignment: .leading, spacing: isCompact ? 20 : 24) {
+            detailsCard(submission)
+            documentsCard(submission)
+            historyCard(submission)
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 12) {
-                Text(submission.displayName)
-                    .font(.system(size: 30, weight: .light))
-                    .foregroundColor(.gray900)
-                HStack(spacing: 12) {
-                    Text(submission.submittedDateText)
-                    Text("•")
-                    Text(submission.id)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .frame(maxWidth: 150, alignment: .leading)
+    private var backButton: some View {
+        Button {
+            dismiss()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.left")
+                    .font(.system(size: 14, weight: .medium))
+                Text("Back")
+                    .font(.system(size: 15, weight: .medium))
+            }
+            .foregroundColor(.black)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Header
+
+    private func header(_ submission: Submission) -> some View {
+        let logo = ReviewDocument(label: "Business Logo", urlString: submission.business_logo_url)
+
+        return HStack(alignment: .top, spacing: 16) {
+            logoAvatar(submission, logo: logo)
+
+            VStack(alignment: .leading, spacing: 10) {
+                // The status is the first thing to know about a submission, so
+                // it rides beside the name rather than at the end of a metadata
+                // line where it used to get lost.
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(submission.displayName)
+                        .font(.system(size: isCompact ? 26 : 30, weight: .light))
+                        .foregroundColor(.gray900)
                     StatusBadge(status: submission.status)
                 }
-                .font(.system(size: 14))
-                .foregroundColor(.gray600)
-            }
-            .padding(.bottom, 40)
 
-            personalDetails(submission)
-                .padding(.bottom, 24)
-            businessDetails(submission)
-                .padding(.bottom, 24)
-            verificationDocuments(submission)
-        }
-    }
+                // The date and the id chip together overflow phone width and
+                // wrap into a ragged two-line clump — stack them there.
+                let submitted = Text("Submitted \(submission.submittedDateTimeText)")
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray600)
 
-    // MARK: - Detail cards
-
-    private func personalDetails(_ submission: Submission) -> some View {
-        sectionCard("Personal Details") {
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 16) {
-                    adaptiveRow(spacing: 24) {
-                        infoField("FULL NAME", submission.displayName)
-                        infoField("AADHAAR NUMBER", submission.aadhar_number ?? "N/A")
+                if isCompact {
+                    VStack(alignment: .leading, spacing: 8) {
+                        submitted
+                        idChip(submission)
                     }
-                    infoField("SUBMITTED", submission.submittedDateTimeText)
-                }
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.gray50)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                adaptiveRow(spacing: 20) {
-                    DocumentCard(url: submission.aadhaar_front_url, label: "Aadhaar Front")
-                    DocumentCard(url: submission.aadhaar_back_url, label: "Aadhaar Back")
+                } else {
+                    HStack(spacing: 10) {
+                        submitted
+                        idChip(submission)
+                    }
                 }
             }
+
+            Spacer(minLength: 0)
         }
     }
 
-    // Side-by-side pairs (info fields, document cards) work fine down to
-    // iPad width, but two flexible-width columns on a phone squeeze both
-    // below a usable width — stack them instead.
     @ViewBuilder
-    private func adaptiveRow(spacing: CGFloat, @ViewBuilder content: () -> some View) -> some View {
-        if isCompact {
-            VStack(alignment: .leading, spacing: spacing, content: content)
+    private func logoAvatar(_ submission: Submission, logo: ReviewDocument) -> some View {
+        let size: CGFloat = isCompact ? 52 : 64
+
+        if logo.isProvided {
+            Button {
+                openViewer(logo, in: [logo])
+            } label: {
+                DocumentPreview(document: logo)
+                    .frame(width: size, height: size)
+                    .background(Color.gray100)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.gray200, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("View business logo")
         } else {
-            HStack(alignment: .top, spacing: spacing, content: content)
+            Circle()
+                .fill(Color.gray900)
+                .frame(width: size, height: size)
+                .overlay(
+                    Text(submission.initial)
+                        .font(.system(size: size / 3, weight: .medium))
+                        .foregroundColor(.white)
+                )
         }
     }
 
-    private func businessDetails(_ submission: Submission) -> some View {
-        sectionCard("Business Details") {
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 16) {
-                    adaptiveRow(spacing: 24) {
-                        infoField("BUSINESS NAME", submission.business_name ?? "—")
-                        infoField("STATE", submission.state ?? "—")
-                    }
-                    infoField("CITY", submission.city ?? "—")
+    private func idChip(_ submission: Submission) -> some View {
+        Button {
+            copy(submission.id, named: "Submission ID")
+        } label: {
+            HStack(spacing: 6) {
+                Text(submission.id)
+                    .font(.system(size: 13, design: .monospaced))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: 140, alignment: .leading)
+                Image(systemName: "doc.on.doc")
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .foregroundColor(.gray600)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Color.gray100, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Copy submission ID")
+    }
+
+    // MARK: - Details
+
+    private struct DetailField: Identifiable {
+        let id = UUID()
+        let label: String
+        let value: String
+        var copyable = false
+        var monospaced = false
+    }
+
+    private func detailFields(_ submission: Submission) -> [DetailField] {
+        var fields: [DetailField] = [
+            // Grouped into fours and monospaced so it can be read straight off
+            // the screen against the Aadhaar card below it.
+            DetailField(
+                label: "AADHAAR NUMBER",
+                value: Self.groupedAadhaar(submission.aadhar_number),
+                copyable: submission.aadhar_number?.isEmpty == false,
+                monospaced: true
+            ),
+            DetailField(label: "BUSINESS NAME", value: submission.business_name.presentable),
+            DetailField(label: "CITY", value: submission.city.presentable),
+            DetailField(label: "STATE", value: submission.state.presentable),
+        ]
+        // Referrals are only set for some submissions; an empty labelled box
+        // for everyone else is noise.
+        if let referredBy = submission.referred_by, !referredBy.isEmpty {
+            fields.append(DetailField(label: "REFERRED BY", value: referredBy, copyable: true, monospaced: true))
+        }
+        if let code = submission.referral_code, !code.isEmpty {
+            fields.append(DetailField(label: "REFERRAL CODE", value: code, copyable: true, monospaced: true))
+        }
+        return fields
+    }
+
+    private func detailsCard(_ submission: Submission) -> some View {
+        sectionCard("Applicant details") {
+            LazyVGrid(
+                columns: Array(
+                    repeating: GridItem(.flexible(), spacing: 20, alignment: .topLeading),
+                    count: isCompact ? 1 : 2
+                ),
+                alignment: .leading,
+                spacing: 20
+            ) {
+                ForEach(detailFields(submission)) { field in
+                    detailField(field)
                 }
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.gray50)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        }
+    }
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("BUSINESS LOGO")
-                        .font(.system(size: 12, weight: .medium))
-                        .kerning(0.6)
-                        .foregroundColor(.gray500)
+    private func detailField(_ field: DetailField) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(field.label)
+                .font(.system(size: 12, weight: .medium))
+                .kerning(0.6)
+                .foregroundColor(.gray500)
 
-                    if let logoURL = submission.business_logo_url, let url = URL(string: logoURL) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            AsyncImage(url: url) { image in
-                                image.resizable().scaledToFill()
-                            } placeholder: {
-                                Color.gray100
-                            }
-                            .frame(width: 64, height: 64)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.gray200, lineWidth: 1))
+            HStack(spacing: 8) {
+                Text(field.value)
+                    .font(.system(size: 15, weight: .medium, design: field.monospaced ? .monospaced : .default))
+                    .foregroundColor(.gray900)
+                    .textSelection(.enabled)
 
-                            Link(destination: url) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "arrow.up.right")
-                                        .font(.system(size: 13, weight: .medium))
-                                    Text("View full size")
-                                }
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.black)
-                            }
+                if field.copyable {
+                    Button {
+                        copy(field.value, named: field.label.capitalized)
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.gray500)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Copy \(field.label.lowercased())")
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// `583485235823` is a wall of digits to check by eye; `5834 8523 5823`
+    /// matches how the number is printed on the card itself.
+    private static func groupedAadhaar(_ raw: String?) -> String {
+        guard let raw, !raw.isEmpty else { return "—" }
+        let digits = raw.filter(\.isNumber)
+        guard digits.count == 12 else { return raw }
+        return stride(from: 0, to: digits.count, by: 4)
+            .map { offset -> String in
+                let start = digits.index(digits.startIndex, offsetBy: offset)
+                let end = digits.index(start, offsetBy: 4)
+                return String(digits[start..<end])
+            }
+            .joined(separator: " ")
+    }
+
+    // MARK: - Documents
+
+    private func documentsCard(_ submission: Submission) -> some View {
+        let all = documents(submission)
+        let providedCount = all.filter(\.isProvided).count
+
+        // Amber, not red: a document that was never uploaded is something to
+        // ask for, which is what the resubmission action is there for — it
+        // isn't a failure the way a rejected application is.
+        let complete = providedCount == all.count
+
+        return sectionCard("Documents", accessory: {
+            Text("\(providedCount) of \(all.count) provided")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(complete ? .gray600 : .yellow900)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(complete ? Color.gray100 : Color.yellow100, in: Capsule())
+        }) {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Tap a document to open it full screen — pinch or double-tap to zoom, swipe for the next one.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.gray500)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                // Adaptive rather than a fixed column count: beside a 320pt
+                // actions panel, two columns on an 11" iPad leave each
+                // document ~170pt across — narrower than the single column a
+                // phone gives it, which is the wrong way round. This fits as
+                // many readable columns as there is room for, and one wide one
+                // when there isn't.
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 240), spacing: 16, alignment: .top)],
+                    spacing: 20
+                ) {
+                    ForEach(all) { document in
+                        DocumentTile(document: document) {
+                            openViewer(document, in: all)
                         }
-                    } else {
-                        Circle()
-                            .fill(Color.gray900)
-                            .frame(width: 64, height: 64)
-                            .overlay(
-                                Text(submission.initial)
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundColor(.white)
-                            )
                     }
                 }
             }
         }
     }
 
-    private func verificationDocuments(_ submission: Submission) -> some View {
-        sectionCard("Verification Documents") {
-            adaptiveRow(spacing: 20) {
-                DocumentCard(url: submission.pan_card_url, label: "PAN Card")
-                DocumentCard(url: submission.gst_certificate_url, label: "GST Certificate")
+    // MARK: - Earlier decision
+
+    /// A resubmission or rejection is already recorded on the row, but the app
+    /// never showed it — so an admin picking a submission back up couldn't see
+    /// what was asked for last time.
+    @ViewBuilder
+    private func historyCard(_ submission: Submission) -> some View {
+        let reason = (submission.rejection_reason ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let requested = submission.rejected_documents ?? []
+
+        if !reason.isEmpty || !requested.isEmpty {
+            sectionCard(submission.status == .resubmission_required ? "Resubmission requested" : "Earlier decision") {
+                VStack(alignment: .leading, spacing: 16) {
+                    if !requested.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("DOCUMENTS ASKED FOR")
+                                .font(.system(size: 12, weight: .medium))
+                                .kerning(0.6)
+                                .foregroundColor(.gray500)
+                            FlowChips(items: requested)
+                        }
+                    }
+                    if !reason.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("REASON GIVEN")
+                                .font(.system(size: 12, weight: .medium))
+                                .kerning(0.6)
+                                .foregroundColor(.gray500)
+                            Text(reason)
+                                .font(.system(size: 14))
+                                .foregroundColor(.gray900)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
             }
         }
     }
 
-    private func sectionCard(_ title: String, @ViewBuilder content: () -> some View) -> some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text(title)
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.gray900)
+    // MARK: - Card chrome
+
+    private func sectionCard<Content: View>(
+        _ title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        sectionCard(title, accessory: { EmptyView() }, content: content)
+    }
+
+    private func sectionCard<Accessory: View, Content: View>(
+        _ title: String,
+        @ViewBuilder accessory: () -> Accessory,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(spacing: 12) {
+                Text(title)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.gray900)
+                Spacer(minLength: 0)
+                accessory()
+            }
             content()
         }
-        .padding(32)
+        .padding(isCompact ? 20 : 28)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         .overlay(
@@ -271,17 +470,9 @@ struct WholesalerReviewView: View {
         )
     }
 
-    private func infoField(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .kerning(0.6)
-                .foregroundColor(.gray500)
-            Text(value)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(.gray900)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+    private func copy(_ value: String, named name: String) {
+        UIPasteboard.general.string = value
+        toast.show("\(name) copied")
     }
 
     // MARK: - Actions panel
@@ -660,69 +851,199 @@ struct WholesalerReviewView: View {
     }
 }
 
-// MARK: - Document card
+// MARK: - Document tile
 
-struct DocumentCard: View {
-    let url: String?
-    let label: String
+/// One document in the review grid: the whole file on a neutral backdrop, its
+/// real type beside the label, and a tap target covering the lot.
+///
+/// The preview is fitted, not filled. A filled 160pt strip — what this used to
+/// be — centre-crops an ID card to the part with the least information on it,
+/// which is the opposite of what the screen is for.
+struct DocumentTile: View {
+    let document: ReviewDocument
+    let onOpen: () -> Void
+
+    @State private var kind: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(label)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.gray900)
-
-            VStack(alignment: .leading, spacing: 8) {
-                ZStack {
-                    Color.gray100
-                    if let url, let imageURL = URL(string: url) {
-                        AsyncImage(url: imageURL) { image in
-                            image.resizable().scaledToFill()
-                        } placeholder: {
-                            ProgressView()
-                        }
-                    } else {
-                        Text("Not provided")
-                            .font(.system(size: 14))
-                            .foregroundColor(.gray400)
-                    }
-                }
-                .frame(height: 160)
-                .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
-                Text("\(label).jpg")
+        // The label leads the preview rather than following it: under a fitted
+        // image the caption floats halfway to the next tile, and in a
+        // single-column grid it reads as that tile's heading instead.
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                // One line, always: a wrapped label is taller than its
+                // neighbours' and pushes that tile's preview out of line with
+                // the rest of the row.
+                Text(document.label)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.gray900)
+                    .foregroundColor(document.isProvided ? .gray900 : .gray500)
                     .lineLimit(1)
-
-                if let url, let linkURL = URL(string: url) {
-                    Link(destination: linkURL) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.up.right")
-                                .font(.system(size: 13, weight: .medium))
-                            Text("View full size")
-                        }
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.black)
-                    }
-                }
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
+                badge
             }
-            .padding(16)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray200, lineWidth: 1)
-            )
+
+            if document.isProvided {
+                Button(action: onOpen) {
+                    preview
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(document.label), open full screen")
+            } else {
+                missing
+            }
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.gray50)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    /// A flexible colour is what gives the box its 4:3 shape — a stack of
+    /// fixed-size content has an ideal size of its own, and `aspectRatio` then
+    /// fits the ratio inside *that* instead of the column width.
+    private func box(_ fill: Color, @ViewBuilder content: () -> some View) -> some View {
+        fill
+            .frame(maxWidth: .infinity)
+            .aspectRatio(4.0 / 3.0, contentMode: .fit)
+            .overlay { content() }
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var preview: some View {
+        box(.gray100) {
+            DocumentPreview(document: document) { kind = $0.kindLabel }
+                .padding(6)
+        }
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.gray100, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.gray200, lineWidth: 1)
         )
+        .overlay(alignment: .topTrailing) {
+            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(7)
+                .background(.black.opacity(0.45), in: Circle())
+                .padding(8)
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var missing: some View {
+        box(.gray50) {
+            VStack(spacing: 8) {
+                Image(systemName: "doc")
+                    .font(.system(size: 22))
+                Text("Not provided")
+                    .font(.system(size: 13))
+            }
+            .foregroundColor(.gray400)
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.gray300, style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+        )
+    }
+
+    @ViewBuilder
+    private var badge: some View {
+        if !document.isProvided {
+            chip("Missing", background: .yellow100, foreground: .yellow900)
+        } else if let kind {
+            chip(kind, background: .gray100, foreground: .gray600)
+        }
+    }
+
+    private func chip(_ text: String, background: Color, foreground: Color) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundColor(foreground)
+            // The label next to it claims the row's width first, which leaves
+            // the chip narrow enough to wrap "Missing" mid-word.
+            .fixedSize()
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(background, in: Capsule())
+    }
+}
+
+// MARK: - Small helpers
+
+/// Wraps chips onto as many lines as they need — the documents asked for in a
+/// resubmission are four labels of unequal length, which an HStack would push
+/// off the edge of a phone.
+struct FlowChips: View {
+    let items: [String]
+
+    var body: some View {
+        FlowLayout(spacing: 8) {
+            ForEach(items, id: \.self) { item in
+                Text(item)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.gray700)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.gray100, in: Capsule())
+            }
+        }
+    }
+}
+
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? .infinity
+        let rows = arrange(subviews: subviews, in: width)
+        let height = rows.reduce(0) { $0 + $1.height } + CGFloat(max(rows.count - 1, 0)) * spacing
+        return CGSize(width: proposal.width ?? rows.map(\.width).max() ?? 0, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let rows = arrange(subviews: subviews, in: bounds.width)
+        var y = bounds.minY
+        for row in rows {
+            var x = bounds.minX
+            for index in row.indices {
+                let size = subviews[index].sizeThatFits(.unspecified)
+                subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+                x += size.width + spacing
+            }
+            y += row.height + spacing
+        }
+    }
+
+    private struct Row {
+        var indices: [Int] = []
+        var width: CGFloat = 0
+        var height: CGFloat = 0
+    }
+
+    private func arrange(subviews: Subviews, in width: CGFloat) -> [Row] {
+        var rows: [Row] = []
+        var current = Row()
+
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            let needed = current.indices.isEmpty ? size.width : current.width + spacing + size.width
+            if needed > width, !current.indices.isEmpty {
+                rows.append(current)
+                current = Row()
+                current.indices = [index]
+                current.width = size.width
+                current.height = size.height
+            } else {
+                current.indices.append(index)
+                current.width = needed
+                current.height = max(current.height, size.height)
+            }
+        }
+        if !current.indices.isEmpty { rows.append(current) }
+        return rows
+    }
+}
+
+private extension Optional where Wrapped == String {
+    /// Blank columns come back as "" as often as NULL; both read as "—".
+    var presentable: String {
+        guard let value = self?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else { return "—" }
+        return value
     }
 }
