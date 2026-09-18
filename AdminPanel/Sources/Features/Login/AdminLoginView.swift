@@ -10,6 +10,7 @@ struct AdminLoginView: View {
     @State private var isPasswordVisible = false
     @State private var error = ""
     @State private var isLoggingIn = false
+    @State private var page: BrowserPage?
 
     private var isCompact: Bool { horizontalSizeClass == .compact }
 
@@ -91,7 +92,10 @@ struct AdminLoginView: View {
             .padding(.horizontal, 32)
 
             Spacer(minLength: 32)
-            Spacer(minLength: 32)
+
+            legalFooter
+                .padding(.horizontal, 32)
+                .padding(.bottom, 28)
         }
         .background(
             LinearGradient(
@@ -100,6 +104,53 @@ struct AdminLoginView: View {
                 endPoint: .bottom
             )
         )
+    }
+
+    // MARK: - Terms, privacy, support
+
+    /// Reachable before signing in, as App Review expects. The pages open
+    /// over the app rather than in Safari.
+    private var legalFooter: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(agreement)
+            Text(support)
+        }
+        .font(.system(size: 13))
+        .foregroundColor(.loginMutedText)
+        // Links take the tint, not the run's own colour.
+        .tint(.white)
+        .lineSpacing(4)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .environment(\.openURL, OpenURLAction { url in
+            page = BrowserPage(url: url)
+            return .handled
+        })
+        .sheet(item: $page) { page in
+            InAppBrowser(url: page.url).ignoresSafeArea()
+        }
+    }
+
+    private var agreement: AttributedString {
+        var text = AttributedString("By continuing, you agree to our ")
+        text += link("Terms of Service", to: LegalLinks.terms)
+        text += AttributedString(" and ")
+        text += link("Privacy Policy", to: LegalLinks.privacy)
+        return text
+    }
+
+    private var support: AttributedString {
+        var text = AttributedString("Need help? ")
+        text += link("Contact support", to: LegalLinks.support)
+        return text
+    }
+
+    private func link(_ label: String, to url: URL) -> AttributedString {
+        var part = AttributedString(label)
+        part.link = url
+        part.font = .system(size: 13, weight: .semibold)
+        part.underlineStyle = .single
+        return part
     }
 
     private var passwordField: some View {
