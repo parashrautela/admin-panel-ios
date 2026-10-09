@@ -66,6 +66,8 @@ struct AdminDashboardView: View {
                                 .padding(.bottom, isCompact ? 32 : 48)
                         }
 
+                        NavigationLink { AdminReferralsView() } label: { Label("Invitations & referrals", systemImage: "person.2.badge.plus") }.padding(.bottom, 20)
+
                         titleRow
                             .padding(.bottom, isCompact ? 20 : 32)
 
@@ -777,5 +779,110 @@ private struct CompactServiceRow: View {
 #Preview {
     NavigationStack {
         AdminDashboardView()
+    }
+}
+
+struct AdminReferralsView: View {
+    var wholesalerID: String? = nil
+    var retailerID: String? = nil
+    @State private var search = ""
+    @State private var status = ""
+    @State private var wholesaler = ""
+    @State private var page = 0
+    @State private var count = 0
+    @State private var links: [ReferralRecord] = []
+    @State private var loading = false
+    @State private var error: String?
+    @State private var events: [ReferralEvent] = []
+    @State private var selected: ReferralRecord?
+    @State private var refreshKey = UUID()
+    var body: some View {
+        List {
+            Section("Find invitations") {
+                TextField("Business name or code", text: $search).autocorrectionDisabled()
+                Picker("Status", selection: $status) {
+                    Text("All statuses").tag("")
+                    ForEach(["unclaimed", "pending", "rewarded", "expired", "cancelled", "rejected", "legacy", "inactive"], id: \.self) { Text($0.capitalized).tag($0) }
+                }
+                if wholesalerID == nil { TextField("Wholesaler ID (optional)", text: $wholesaler).textInputAutocapitalization(.never).autocorrectionDisabled() }
+            }
+            if let error { Section { Text(error).foregroundStyle(.red); Button("Retry") { refreshKey = UUID() } } }
+            if links.isEmpty && !loading && error == nil { Text("No matching invitations.") }
+            ForEach(links) { link in
+                Section {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("\(link.inviter_name ?? "Wholesaler") → \(link.retailer_name ?? "Not accepted")").font(.headline)
+                        Text(link.code).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                        Text("\(link.status.capitalized) · Review: \(link.retailer_status ?? "—")").font(.subheadline)
+                        if link.policy_version == 1 {
+                            Text("Gift: \(link.gift_credits) · Extra reserved: \(link.extra_credits)")
+                            Text("Returned: \(link.refunded_credits) unexpired credits")
+                            Text("Reward: \(link.reward_ledger_id == nil ? "Pending" : "1,000 issued") · Funding: \(link.funding_state)")
+                        } else { Text("Original invitation terms") }
+                        Text("Created: \(date(link.created_at))\nAccepted: \(date(link.accepted_at))\nVerified / settled: \(date(link.settled_at))").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Button("View audit events") { Task { await audit(link) } }
+                    NavigationLink("Wholesaler details", value: ReviewRoute(entity: .wholesaler, id: link.wholesaler_id))
+                    if let id = link.retailer_id { NavigationLink("Retailer details", value: ReviewRoute(entity: .retailer, id: id)) }
+                    if link.retailer_status == "verified", link.funding_state == "reserved", let id = link.retailer_id {
+                        Button("Retry settlement") { Task {
+                            do { try await AdminAPI.repairReferral(retailer: id); await load() }
+                            catch { self.error = error.localizedDescription }
+                        } }.disabled(loading)
+                    }
+                }
+            }
+            Section {
+                HStack {
+                    Button("Previous") { page -= 1 }.disabled(page == 0 || loading)
+                    Spacer()
+                    Text("Page \(page + 1) · \(count)").font(.caption)
+                    Spacer()
+                    Button("Next") { page += 1 }.disabled((page + 1) * 25 >= count || loading)
+                }
+            }
+        }
+        .navigationTitle("Referrals").navigationBarTitleDisplayMode(.inline)
+        .overlay { if loading { ProgressView() } }
+        .refreshable { await load() }
+        .task(id: "\(page)|\(search)|\(status)|\(wholesaler)|\(refreshKey)") {
+            try? await Task.sleep(for: .milliseconds(300)); guard !Task.isCancelled else { return }; await load()
+        }
+        .onChange(of: search) { page = 0 }.onChange(of: status) { page = 0 }.onChange(of: wholesaler) { page = 0 }
+        .sheet(item: $selected) { link in
+            NavigationStack {
+                List {
+                    if events.isEmpty { Text("No recorded events for this original invitation.") }
+                    ForEach(events) { event in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(event.event.capitalized).font(.headline)
+                            Text(date(event.created_at)).font(.caption)
+                            Text(event.actor).font(.caption).textSelection(.enabled)
+                        }
+                    }
+                }.navigationTitle("Invitation audit").navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { selected = nil } } }
+            }
+        }
+    }
+    @MainActor private func load() async {
+        loading = true; error = nil; defer { if !Task.isCancelled { loading = false } }
+        do {
+            let result = try await AdminAPI.referrals(page: page, search: search, status: status.isEmpty ? nil : status,
+                wholesaler: wholesalerID ?? (wholesaler.isEmpty ? nil : wholesaler), retailer: retailerID)
+            guard !Task.isCancelled else { return }
+            links = result.links; count = result.count
+        } catch { if !Task.isCancelled { self.error = error.localizedDescription; links = [] } }
+    }
+    @MainActor private func audit(_ link: ReferralRecord) async {
+        do { events = try await AdminAPI.referralEvents(id: link.id); selected = link }
+        catch { self.error = error.localizedDescription }
+    }
+    private func date(_ raw: String?) -> String {
+        guard let raw else { return "—" }
+        let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let value = formatter.date(from: raw) ?? ISO8601DateFormatter().date(from: raw) else { return raw }
+        let display = DateFormatter(); display.timeZone = TimeZone(identifier: "Asia/Kolkata"); display.dateStyle = .medium; display.timeStyle = .short
+        return display.string(from: value)
     }
 }

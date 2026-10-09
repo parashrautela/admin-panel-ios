@@ -70,6 +70,7 @@ struct Submission: Codable, Identifiable, Hashable {
     var rejected_documents: [String]?
     var referred_by: String?
     var referral_code: String?
+    var inviter_business_name: String?
 
     var status: WholesalerStatus { verification_status ?? .pending }
     var displayName: String { full_name ?? "—" }
@@ -107,3 +108,26 @@ struct ReviewRoute: Hashable {
     let entity: ReviewEntity
     let id: String
 }
+
+struct ReferralRecord: Decodable, Identifiable {
+    let id: String
+    let code: String
+    let wholesaler_id: String
+    let retailer_id: String?
+    let inviter_name: String?
+    let retailer_name: String?
+    let retailer_status: String?
+    let status: String
+    let policy_version: Int
+    let gift_credits: Int
+    let extra_credits: Int
+    let funding_state: String
+    let refunded_credits: Int
+    let created_at: String
+    let accepted_at: String?
+    let settled_at: String?
+    let gift_ledger_id: String?
+    let reward_ledger_id: String?
+}
+struct ReferralPage: Decodable { let links: [ReferralRecord]; let count: Int; let page: Int }
+struct ReferralEvent: Decodable, Identifiable { let id: String; let event: String; let actor: String; let created_at: String }

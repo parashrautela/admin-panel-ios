@@ -116,6 +116,10 @@ struct WholesalerReviewView: View {
             VStack(alignment: .leading, spacing: isCompact ? 20 : 24) {
                 backButton
                 header(submission)
+                NavigationLink {
+                    AdminReferralsView(wholesalerID: entity == .wholesaler ? submission.id : nil, retailerID: entity == .retailer ? submission.id : nil)
+                } label: { Label("Invitations & referral credits", systemImage: "person.2.badge.plus") }
+
 
                 // A fixed 320pt actions panel beside the review content
                 // doesn't leave enough room for either on phone width —
@@ -284,7 +288,7 @@ struct WholesalerReviewView: View {
         // Referrals are only set for some submissions; an empty labelled box
         // for everyone else is noise.
         if let referredBy = submission.referred_by, !referredBy.isEmpty {
-            fields.append(DetailField(label: "REFERRED BY", value: referredBy, copyable: true, monospaced: true))
+            fields.append(DetailField(label: "INVITED BY", value: submission.inviter_business_name ?? referredBy))
         }
         if let code = submission.referral_code, !code.isEmpty {
             fields.append(DetailField(label: "REFERRAL CODE", value: code, copyable: true, monospaced: true))
@@ -656,6 +660,10 @@ struct WholesalerReviewView: View {
 
     private func rejectionPanel(_ submission: Submission) -> some View {
         VStack(alignment: .leading, spacing: 16) {
+            if entity == .retailer {
+                Text("Final rejection ends any new invitation gift and releases its funding. Use Request Resubmission when documents need corrections.")
+                    .font(.system(size: 13)).foregroundColor(.gray600)
+            }
             Text("Select rejection reason:")
                 .font(.system(size: 14, weight: .medium))
 

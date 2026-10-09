@@ -71,6 +71,21 @@ enum AdminAPI {
         )
     }
 
+    static func referrals(page: Int, search: String, status: String?, wholesaler: String?, retailer: String?) async throws -> ReferralPage {
+        struct Body: Encodable { let action = "list"; let page: Int; let search: String; let status: String?; let wholesaler_id: String?; let retailer_id: String? }
+        return try await invoke("admin-referrals", body: Body(page: page, search: search, status: status, wholesaler_id: wholesaler, retailer_id: retailer))
+    }
+    static func referralEvents(id: String) async throws -> [ReferralEvent] {
+        struct Body: Encodable { let action = "events"; let id: String }
+        struct Response: Decodable { let events: [ReferralEvent] }
+        let response: Response = try await invoke("admin-referrals", body: Body(id: id))
+        return response.events
+    }
+    static func repairReferral(retailer: String) async throws {
+        struct Body: Encodable { let action = "settle"; let retailer_id: String }
+        try await invokeVoid("admin-referrals", body: Body(retailer_id: retailer))
+    }
+
     // MARK: - Admin actions (same payloads as the web app)
 
     static func verifySubmission(entity: ReviewEntity, id: String) async throws {
