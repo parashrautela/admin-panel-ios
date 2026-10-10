@@ -31,3 +31,7 @@ xcodebuild -project AdminPanel.xcodeproj -scheme AdminPanel \
 ## Distribution
 
 These are native app changes, so updating the web deployment does not update installed iOS binaries. A signed TestFlight/App Store build is required to deliver this version to administrators' phones. This task builds and validates the source; no new App Store submission or TestFlight upload has been made. The shared backend is already live and does not need another migration for this iOS update.
+
+## Immediate credits follow-up
+
+**Give credits now** is a separate native action on both business roles. Enter a positive amount and a reason to send a one-time bonus immediately, available until spent. It leaves the recurring allowance and refill deadline unchanged. Exact payloads are retained for lost-response retries. The API uses the same password-gated handler and new service-only admin grant RPC as the web. Balance details show the admin bonus separately. The native amount/reason and request encoding tests and production simulator build pass. The real native UI test also passes immediate sends and recurring edits for both business roles. Updated native distribution still requires a new signed app upload.

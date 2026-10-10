@@ -12,6 +12,7 @@ struct BusinessCreditsView: View {
     @State private var notice: String?
     @State private var editing = false
     @State private var reset = false
+    @State private var grantNow = false
     @State private var amount = ""
     @State private var reason = ""
     // Preserve the exact payload after a lost response. Retry never silently changes its version/key.
@@ -57,6 +58,7 @@ struct BusinessCreditsView: View {
                     }
                 } else { Text("Verify this business before changing credits.").font(.subheadline).foregroundStyle(.secondary) }
                 DisclosureGroup("Balance details") {
+                    LabeledContent("Admin bonus", value: (item.admin_available ?? 0).formatted())
                     LabeledContent("Recurring", value: item.recurring_available.formatted())
                     LabeledContent("Referral gifts", value: item.gift_available.formatted())
                     LabeledContent("Purchased", value: item.paid_available.formatted())
@@ -75,22 +77,23 @@ struct BusinessCreditsView: View {
     }
 
     @ViewBuilder private func actions(_ item: CreditAllowanceItem, defaultAmount: Int) -> some View {
+        Button("Give credits now") { begin(amount: 0, reset: false, grant: true) }
         Button("Change credits") { begin(amount: item.daily_allowance, reset: false) }
         Button("Pause credits") { begin(amount: 0, reset: false) }
         Button("Use default (\(defaultAmount.formatted()))") { begin(amount: defaultAmount, reset: true) }
     }
     private func editor(_ item: CreditAllowanceItem) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(reset ? "Restore the default allowance" : "Change the next allowance").font(.subheadline.bold())
-            TextField("Credits per 24 hours", text: $amount).keyboardType(.numberPad)
+            Text(grantNow ? "Give credits now" : reset ? "Restore the default allowance" : "Change the next allowance").font(.subheadline.bold())
+            TextField(grantNow ? "Credits to send now" : "Credits per 24 hours", text: $amount).keyboardType(.numberPad)
                 .textFieldStyle(.roundedBorder).disabled(reset || saving || pending != nil)
-                .accessibilityLabel("Credits per 24 hours").accessibilityIdentifier("credit-amount")
+                .accessibilityLabel(grantNow ? "Credits to send now" : "Credits per 24 hours").accessibilityIdentifier("credit-amount")
             TextField("Reason (required)", text: $reason, axis: .vertical)
                 .textFieldStyle(.roundedBorder).lineLimit(2...4).disabled(saving || pending != nil)
                 .accessibilityIdentifier("credit-reason")
-            Text("Applies at the next refill. Current credits remain available.").font(.caption).foregroundStyle(.secondary)
+            Text(grantNow ? "Adds a one-time bonus immediately, available until spent. The allowance and refill time stay the same." : "Applies at the next refill. Current credits remain available.").font(.caption).foregroundStyle(.secondary)
             HStack {
-                Button(pending == nil ? "Save credits" : "Retry same request") { Task { await save(item) } }
+                Button(pending == nil ? (grantNow ? "Send credits now" : "Save credits") : "Retry same request") { Task { await save(item) } }
                     .buttonStyle(.borderedProminent).disabled(saving || reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .accessibilityIdentifier("credit-save")
                 Button("Cancel") {
@@ -101,8 +104,9 @@ struct BusinessCreditsView: View {
             }
         }
     }
-    private func begin(amount: Int, reset: Bool) {
-        self.amount = String(amount); self.reset = reset; reason = ""; pending = nil
+    private func begin(amount: Int, reset: Bool, grant: Bool = false) {
+        grantNow = grant
+        self.amount = grant ? "" : String(amount); self.reset = reset; reason = ""; pending = nil
         error = nil; notice = nil; editing = true
     }
     private func refillText(_ item: CreditAllowanceItem) -> String {
@@ -136,14 +140,20 @@ struct BusinessCreditsView: View {
             let change: CreditAllowanceChange
             if let pending { change = pending }
             else {
-                change = try CreditAllowanceChange.make(entity: entity, id: businessID, amount: amount,
+                change = grantNow ? try CreditAllowanceChange.grant(entity: entity, id: businessID, amount: amount, reason: reason) : try CreditAllowanceChange.make(entity: entity, id: businessID, amount: amount,
                     reason: reason, version: item.policy_version, reset: reset)
                 pending = change
             }
-            let result = try await AdminAPI.saveCreditAllowance(change)
-            guard result.ok else { throw AdminAPIError(message: "The allocation was not saved.") }
+            if grantNow {
+                let result = try await AdminAPI.giveCreditsNow(change)
+                guard result.ok else { throw AdminAPIError(message: "The credits were not sent.") }
+                notice = "Sent. \(result.granted.formatted()) credits are available now."
+            } else {
+                let result = try await AdminAPI.saveCreditAllowance(change)
+                guard result.ok else { throw AdminAPIError(message: "The allocation was not saved.") }
+                notice = result.next_allowance == 0 ? "Saved. Credits will pause after the current allowance." : "Saved. \(result.next_allowance.formatted()) credits at the next refill."
+            }
             pending = nil; editing = false
-            notice = result.next_allowance == 0 ? "Saved. Credits will pause after the current allowance." : "Saved. \(result.next_allowance.formatted()) credits at the next refill."
             saving = false; await load()
         } catch {
             self.error = error.localizedDescription

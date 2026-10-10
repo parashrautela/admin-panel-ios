@@ -8,6 +8,7 @@ struct CreditAllowanceItem: Decodable, Identifiable {
     let policy_version: Int
     let current_allowance: Int?
     let next_refill_at: String?
+    let admin_available: Int?
     let recurring_available: Int
     let gift_available: Int
     let paid_available: Int
@@ -29,6 +30,7 @@ struct CreditAllowanceChange: Encodable, Equatable {
     let reason: String
     let expected_version: Int
     let request_key: String
+    let credits: Int?
 
     static func make(entity: ReviewEntity, id: String, amount: String, reason: String,
                      version: Int, reset: Bool, requestKey: String = UUID().uuidString) throws -> Self {
@@ -42,8 +44,15 @@ struct CreditAllowanceChange: Encodable, Equatable {
         }
         return Self(action: reset ? "reset_default" : "set_allowance", business_type: entity.rawValue,
                     wholesaler_id: id, daily_allowance: reset ? nil : parsed, reason: note,
-                    expected_version: version, request_key: requestKey)
+                    expected_version: version, request_key: requestKey, credits: nil)
     }
+    static func grant(entity: ReviewEntity, id: String, amount: String, reason: String) throws -> Self {
+        let validated = try make(entity: entity, id: id, amount: amount, reason: reason, version: 0, reset: false)
+        guard let units = validated.daily_allowance, units > 0 else { throw CreditInputError.invalid("Enter a whole number between 1 and 100,000.") }
+        return Self(action: "grant_now", business_type: entity.rawValue, wholesaler_id: id, daily_allowance: nil,
+            reason: validated.reason, expected_version: 0, request_key: validated.request_key, credits: units)
+    }
+
 }
 enum CreditInputError: LocalizedError {
     case invalid(String)
@@ -71,4 +80,11 @@ struct AdminRefillClock {
         guard let end = Self.date(deadline) else { return nil }
         return max(0, end.timeIntervalSince(serverDate) - max(0, uptime - sampledUptime))
     }
+}
+
+struct ImmediateCreditSaved: Decodable {
+    let ok: Bool
+    let granted: Int
+    let available: Int
+    let replayed: Bool
 }

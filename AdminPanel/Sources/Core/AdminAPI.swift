@@ -103,6 +103,10 @@ enum AdminAPI {
         try await invoke("admin-credit-allowances", body: change)
     }
 
+    static func giveCreditsNow(_ change: CreditAllowanceChange) async throws -> ImmediateCreditSaved {
+        try await invoke("admin-credit-allowances", body: change)
+    }
+
     // MARK: - Admin actions (same payloads as the web app)
 
     static func verifySubmission(entity: ReviewEntity, id: String) async throws {

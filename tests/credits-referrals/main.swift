@@ -60,3 +60,14 @@ if CommandLine.arguments.count > 1 {
     }
     print("PASS sanitized live production allocation responses decode in iOS for both business roles")
 }
+
+for role in ReviewEntity.allCases {
+    let immediate = try CreditAllowanceChange.grant(entity: role, id: id, amount: "700", reason: "Support")
+    let payload = try JSONSerialization.jsonObject(with: JSONEncoder().encode(immediate)) as! [String: Any]
+    check(payload["action"] as? String == "grant_now" && payload["business_type"] as? String == role.rawValue, "Immediate grant selects the correct business")
+    check(payload["credits"] as? Int == 700 && payload["daily_allowance"] == nil, "Immediate grant cannot change the recurring allowance")
+    check(UUID(uuidString:immediate.request_key) != nil, "Immediate grant has a replay UUID")
+}
+do { _ = try CreditAllowanceChange.grant(entity: .retailer, id: id, amount: "0", reason: "Support"); fatalError("Zero bonus accepted") }
+catch is CreditInputError { }
+print("PASS iOS immediate grants: correct role, positive amount, reason and stable request key; no recurring allocation field")

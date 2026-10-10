@@ -63,6 +63,7 @@ struct RootView: View {
     static var versions = [ws:0,ret:0]
     static var amounts = [ws:2000,ret:2000]
     static var keys = Set<String>()
+    static var bonuses = [ws:0,ret:0]
     static func submission(_ entity: ReviewEntity) -> Submission {
         let json: [String: Any] = ["id": entity == .wholesaler ? ws : ret,"full_name":"Sample Owner","business_name":"Sample Business","verification_status":"verified","inviter_business_name":"Sample Wholesale Business"]
         return try! JSONDecoder().decode(Submission.self, from: JSONSerialization.data(withJSONObject: json))
@@ -74,7 +75,13 @@ struct RootView: View {
             let role = payload["business_type"] as! String
             guard (role == "wholesaler" && id == ws) || (role == "retailer" && id == ret) else { throw AdminAPIError(message:"Wrong business target") }
             if payload["action"] as? String == "list" {
-                return ["ok":true,"items":[["wholesaler_id":id,"verification_status":"verified","daily_allowance":amounts[id]!,"is_custom":amounts[id] != 2000,"policy_version":versions[id]!,"current_allowance":2000,"next_refill_at":formatter.string(from:now.addingTimeInterval(82800)),"recurring_available":1700,"gift_available":1000,"paid_available":68,"available":2768]],"server_now":formatter.string(from:now),"program_active":true,"default_allowance":2000]
+                return ["ok":true,"items":[["wholesaler_id":id,"verification_status":"verified","daily_allowance":amounts[id]!,"is_custom":amounts[id] != 2000,"policy_version":versions[id]!,"current_allowance":2000,"next_refill_at":formatter.string(from:now.addingTimeInterval(82800)),"recurring_available":1700,"gift_available":1000,"paid_available":68,"available":2768+bonuses[id]!,"admin_available":bonuses[id]!]],"server_now":formatter.string(from:now),"program_active":true,"default_allowance":2000]
+            }
+            if payload["action"] as? String == "grant_now" {
+                guard let credits = payload["credits"] as? Int, credits > 0, let key = payload["request_key"] as? String, UUID(uuidString:key) != nil, !(payload["reason"] as? String ?? "").isEmpty else { throw AdminAPIError(message:"Invalid immediate grant") }
+                let replayed = keys.contains(key)
+                if !replayed { keys.insert(key); bonuses[id]! += credits }
+                return ["ok":true,"granted":credits,"available":2768+bonuses[id]!,"replayed":replayed]
             }
             guard payload["expected_version"] as? Int == versions[id], let key = payload["request_key"] as? String, UUID(uuidString:key) != nil, !(payload["reason"] as? String ?? "").isEmpty else { throw AdminAPIError(message:"Invalid version or replay key") }
             if keys.contains(key) { throw AdminAPIError(message:"Repeated fixture mutation") }
@@ -97,6 +104,14 @@ final class CreditsTests: XCTestCase {
         let app = XCUIApplication(); app.launch()
         for role in ["Wholesaler", "Retailer"] {
             app.buttons[role].tap()
+            let give = app.buttons["Give credits now"]
+            XCTAssertTrue(give.waitForExistence(timeout:10)); give.tap()
+            let bonus = app.textFields["credit-amount"]; bonus.tap(); bonus.typeText("700")
+            let bonusReason = app.textFields["credit-reason"].exists ? app.textFields["credit-reason"] : app.textViews["credit-reason"]
+            bonusReason.tap(); bonusReason.typeText("Immediate support"); app.swipeUp()
+            app.buttons["credit-save"].tap()
+            XCTAssertTrue(app.staticTexts["Sent. 700 credits are available now."].waitForExistence(timeout:10))
+            app.swipeDown()
             let change = app.buttons["Change credits"]
             XCTAssertTrue(change.waitForExistence(timeout:10)); change.tap()
             let amount = app.textFields["credit-amount"]
