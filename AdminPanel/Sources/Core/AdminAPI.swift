@@ -6,6 +6,8 @@ import Supabase
 // FunctionsError's generic "non-2xx status code" text.
 struct AdminAPIError: LocalizedError {
     let message: String
+    var code: String? = nil
+    var status: Int? = nil
     var errorDescription: String? { message }
 }
 
@@ -86,6 +88,21 @@ enum AdminAPI {
         try await invokeVoid("admin-referrals", body: Body(retailer_id: retailer))
     }
 
+    static func creditAllowance(entity: ReviewEntity, id: String) async throws -> CreditAllowancePage {
+        struct Body: Encodable {
+            let action = "list"
+            let business_type: String
+            let wholesaler_id: String
+            let page = 0
+            let pageSize = 1
+        }
+        return try await invoke("admin-credit-allowances", body: Body(business_type: entity.rawValue, wholesaler_id: id))
+    }
+
+    static func saveCreditAllowance(_ change: CreditAllowanceChange) async throws -> CreditAllowanceSaved {
+        try await invoke("admin-credit-allowances", body: change)
+    }
+
     // MARK: - Admin actions (same payloads as the web app)
 
     static func verifySubmission(entity: ReviewEntity, id: String) async throws {
@@ -162,11 +179,16 @@ enum AdminAPI {
     }
 
     private static func mapError(_ error: Error) -> Error {
-        guard case FunctionsError.httpError(_, let data) = error,
-              let body = try? JSONDecoder().decode([String: String].self, from: data),
-              let message = body["error"] else {
-            return error
+        struct Failure: Decodable { let error: String?; let message: String? }
+        guard case let FunctionsError.httpError(status, data) = error,
+              let body = try? JSONDecoder().decode(Failure.self, from: data) else { return error }
+        let friendly: String
+        switch body.error {
+        case "VERSION_CONFLICT": friendly = "This allocation changed elsewhere. Refresh before editing again."
+        case "IDEMPOTENCY_CONFLICT": friendly = "This request could not be reused. Refresh before editing again."
+        case "NOT_VERIFIED": friendly = "Verify this business before changing its allocation."
+        default: friendly = body.message ?? body.error ?? "The request could not be completed."
         }
-        return AdminAPIError(message: message)
+        return AdminAPIError(message: friendly, code: body.error, status: status)
     }
 }

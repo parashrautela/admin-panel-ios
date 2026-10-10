@@ -116,10 +116,7 @@ struct WholesalerReviewView: View {
             VStack(alignment: .leading, spacing: isCompact ? 20 : 24) {
                 backButton
                 header(submission)
-                NavigationLink {
-                    AdminReferralsView(wholesalerID: entity == .wholesaler ? submission.id : nil, retailerID: entity == .retailer ? submission.id : nil)
-                } label: { Label("Invitations & referral credits", systemImage: "person.2.badge.plus") }
-
+                BusinessCreditsAndReferrals(entity: entity, submission: submission)
 
                 // A fixed 320pt actions panel beside the review content
                 // doesn't leave enough room for either on phone width —

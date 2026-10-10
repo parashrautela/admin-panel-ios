@@ -131,3 +131,18 @@ struct ReferralRecord: Decodable, Identifiable {
 }
 struct ReferralPage: Decodable { let links: [ReferralRecord]; let count: Int; let page: Int }
 struct ReferralEvent: Decodable, Identifiable { let id: String; let event: String; let actor: String; let created_at: String }
+
+extension ReferralRecord {
+    var displayStatus: String {
+        switch status {
+        case "rewarded": return "Reward paid"
+        case "pending": return "Waiting for verification"
+        case "unclaimed": return "Not joined yet"
+        case "legacy": return "Original referral"
+        default: return status.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+    }
+    var canCompleteReward: Bool {
+        policy_version == 1 && retailer_status == "verified" && funding_state == "reserved" && retailer_id != nil
+    }
+}

@@ -8,10 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		1F66C009F586CCE2070D2A29 /* AdminLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE2F7473775230E72B474B2 /* AdminLoginView.swift */; };
+		4916D25E98387F678F6ECF9C /* CreditAllowanceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4BB8F25647B3B3BD48569AB /* CreditAllowanceModels.swift */; };
 		680D04F6E162F3F5D50F079F /* LiquidBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF498E50B0D3C01407F084E /* LiquidBackground.swift */; };
 		6B9C2FE14C423D2D7441F135 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = D9B1DEF00A8379E2A0E80E4E /* Supabase */; };
 		6D9A1FA4AB077A7341BCF820 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102D52FEC40F3E704CA619E9 /* RootView.swift */; };
 		72CE3BE9A7B27FB16D08A289 /* AdminAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A616E2187E69AFAF693EDC /* AdminAuth.swift */; };
+		8305408A5A4242A44DB16275 /* BusinessCreditsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7808FE6A6CF55B9A0D93CDEF /* BusinessCreditsView.swift */; };
 		8815AA7B0B8D035985F4BE75 /* DocumentViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A92C0DFE2F449FD281E1C70C /* DocumentViewer.swift */; };
 		89C7D89D441EECED07CDA8A8 /* AdminAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43777DE0355DDC688EC882D /* AdminAPI.swift */; };
 		A45B9731347E68476AC7B249 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png in Resources */ = {isa = PBXBuildFile; fileRef = 176341C226CB996BE65763E2 /* 9e42596e-e4e6-475c-9240-4e2e1355d091 2.png */; };
@@ -25,6 +27,7 @@
 		D8490EA609E74A7B41B70C42 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 651680B895EB833424151121 /* Assets.xcassets */; };
 		DF6C7EAEC72ABFF1B413D2D2 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C0F5F7BDB0435BA54865CAC /* SupabaseClient.swift */; };
 		E940AB13CF5A91AE57533192 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5180C11F21F52B301F68D1BC /* PrivacyInfo.xcprivacy */; };
+		F35055A01AB3E3360EA532C3 /* BusinessReferralsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30879695C7B6DFA715A5F48 /* BusinessReferralsView.swift */; };
 		F9A05D3016D2A3D0CD90C3D3 /* LegalLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226FD5C64FE6AD316D57D34A /* LegalLinks.swift */; };
 /* End PBXBuildFile section */
 
@@ -40,6 +43,7 @@
 		3FF498E50B0D3C01407F084E /* LiquidBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidBackground.swift; sourceTree = "<group>"; };
 		5180C11F21F52B301F68D1BC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		651680B895EB833424151121 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7808FE6A6CF55B9A0D93CDEF /* BusinessCreditsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessCreditsView.swift; sourceTree = "<group>"; };
 		7C242384DABA76578459F577 /* ToastCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastCenter.swift; sourceTree = "<group>"; };
 		8692399AF29E777B99D21184 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		89A616E2187E69AFAF693EDC /* AdminAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAuth.swift; sourceTree = "<group>"; };
@@ -47,7 +51,9 @@
 		A92C0DFE2F449FD281E1C70C /* DocumentViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentViewer.swift; sourceTree = "<group>"; };
 		ADED9120A9750EBF3322D112 /* AdminPanel.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AdminPanel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DBE2F7473775230E72B474B2 /* AdminLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminLoginView.swift; sourceTree = "<group>"; };
+		E4BB8F25647B3B3BD48569AB /* CreditAllowanceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditAllowanceModels.swift; sourceTree = "<group>"; };
 		EEE5A329C84B6AE712F1042B /* AdminDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminDashboardView.swift; sourceTree = "<group>"; };
+		F30879695C7B6DFA715A5F48 /* BusinessReferralsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessReferralsView.swift; sourceTree = "<group>"; };
 		F43777DE0355DDC688EC882D /* AdminAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminAPI.swift; sourceTree = "<group>"; };
 		F4F841D15C976AB815D20190 /* AdminProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminProfileView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -75,6 +81,7 @@
 		1736B3EBB5A8453D80D04D8B /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				A6B9916F0F389AF9872805B7 /* Credits */,
 				C60CD8BB841420885E81B87B /* Dashboard */,
 				712B7544CEB407CEF99461B8 /* Login */,
 				04096665DD490298EC3F0B76 /* Profile */,
@@ -135,11 +142,21 @@
 			path = AdminPanel/Sources;
 			sourceTree = "<group>";
 		};
+		A6B9916F0F389AF9872805B7 /* Credits */ = {
+			isa = PBXGroup;
+			children = (
+				7808FE6A6CF55B9A0D93CDEF /* BusinessCreditsView.swift */,
+				F30879695C7B6DFA715A5F48 /* BusinessReferralsView.swift */,
+			);
+			path = Credits;
+			sourceTree = "<group>";
+		};
 		B30481701FA541CE9497BC0A /* Core */ = {
 			isa = PBXGroup;
 			children = (
 				F43777DE0355DDC688EC882D /* AdminAPI.swift */,
 				89A616E2187E69AFAF693EDC /* AdminAuth.swift */,
+				E4BB8F25647B3B3BD48569AB /* CreditAllowanceModels.swift */,
 				226FD5C64FE6AD316D57D34A /* LegalLinks.swift */,
 				3FF498E50B0D3C01407F084E /* LiquidBackground.swift */,
 				0816DA827B297FC5BDA114C4 /* Models.swift */,
@@ -266,6 +283,9 @@
 				1F66C009F586CCE2070D2A29 /* AdminLoginView.swift in Sources */,
 				B2829EA5DDE9B8232D83655C /* AdminPanelApp.swift in Sources */,
 				B73A016F6E32957775F46F92 /* AdminProfileView.swift in Sources */,
+				8305408A5A4242A44DB16275 /* BusinessCreditsView.swift in Sources */,
+				F35055A01AB3E3360EA532C3 /* BusinessReferralsView.swift in Sources */,
+				4916D25E98387F678F6ECF9C /* CreditAllowanceModels.swift in Sources */,
 				8815AA7B0B8D035985F4BE75 /* DocumentViewer.swift in Sources */,
 				F9A05D3016D2A3D0CD90C3D3 /* LegalLinks.swift in Sources */,
 				680D04F6E162F3F5D50F079F /* LiquidBackground.swift in Sources */,
