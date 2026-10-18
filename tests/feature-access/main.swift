@@ -184,6 +184,20 @@ check(auditRow1.old_value?["enabled"]?.boolValue == true, "old_value enabled mus
 check(auditRow1.new_value?["enabled"]?.boolValue == false, "new_value enabled must be false")
 check(auditRow1.new_value?["version"]?.intValue == 1, "new_value version must be 1")
 
+// Production shape: feature_flag_audit.id is a bigserial and arrives as a JSON number,
+// reset rows carry new_value: null, and timestamps have microseconds.
+let liveAuditJSON = """
+{"ok":true,"rows":[
+  {"id":6,"wholesaler_user_id":"e2b1c0aa-0000-4000-8000-000000000001","feature_key":"messages","action":"reset","old_value":{"enabled":true,"version":2},"new_value":null,"reason":"test","actor":"admin-password","created_at":"2026-10-18T16:14:36.123456+00:00"},
+  {"id":9007199254740991,"wholesaler_user_id":null,"feature_key":"chamak","action":"catalog_mode","old_value":{"default_enabled":true,"enforcement_mode":"off"},"new_value":{"default_enabled":true,"enforcement_mode":"enforce"},"reason":"enable","actor":"admin-password","created_at":"2026-10-18T16:20:00+00:00"}
+],"count":2,"page":0,"pageSize":25}
+"""
+let liveAudit = try JSONDecoder().decode(FeatureAuditPage.self, from: Data(liveAuditJSON.utf8))
+check(liveAudit.rows.map { $0.id } == ["6", "9007199254740991"], "Numeric audit ids must decode as strings")
+check(liveAudit.rows[0].new_value == nil || liveAudit.rows[0].new_value == .null, "Reset rows have no new value")
+check(liveAudit.rows[1].new_value?["enforcement_mode"]?.stringValue == "enforce", "Catalog mode changes decode")
+check(FeatureDateFormatter.indiaTimeString(from: liveAudit.rows[0].created_at) != "—", "Microsecond timestamps parse")
+
 let catalogJSON = """
 {
   "ok": true,

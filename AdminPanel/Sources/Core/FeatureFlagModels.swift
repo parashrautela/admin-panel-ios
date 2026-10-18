@@ -127,6 +127,29 @@ struct FeatureAuditRow: Codable, Identifiable, Equatable {
     let reason: String?
     let actor: String?
     let created_at: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case id, wholesaler_user_id, feature_key, action, old_value, new_value, reason, actor, created_at
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        // feature_flag_audit.id is a bigserial, so the server sends a JSON number.
+        // Accept a string too, so a change of key type never breaks the History sheet.
+        if let number = try? c.decode(Int64.self, forKey: .id) {
+            id = String(number)
+        } else {
+            id = try c.decode(String.self, forKey: .id)
+        }
+        wholesaler_user_id = try c.decodeIfPresent(String.self, forKey: .wholesaler_user_id)
+        feature_key = try c.decode(String.self, forKey: .feature_key)
+        action = try c.decode(String.self, forKey: .action)
+        old_value = try c.decodeIfPresent(AnyCodableValue.self, forKey: .old_value)
+        new_value = try c.decodeIfPresent(AnyCodableValue.self, forKey: .new_value)
+        reason = try c.decodeIfPresent(String.self, forKey: .reason)
+        actor = try c.decodeIfPresent(String.self, forKey: .actor)
+        created_at = try c.decodeIfPresent(String.self, forKey: .created_at)
+    }
 }
 
 /// Page of audit logs returned by the `audit` action.
