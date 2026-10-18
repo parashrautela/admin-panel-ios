@@ -117,6 +117,7 @@ struct WholesalerReviewView: View {
                 backButton
                 header(submission)
                 BusinessCreditsAndReferrals(entity: entity, submission: submission)
+                if entity == .wholesaler { FeatureAccessView(wholesalerID: submission.id) }
 
                 // A fixed 320pt actions panel beside the review content
                 // doesn't leave enough room for either on phone width —

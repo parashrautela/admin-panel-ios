@@ -150,6 +150,94 @@ enum AdminAPI {
         try await invokeVoid("admin-save-notes", body: Body(table: entity.table, id: id, notes: notes))
     }
 
+    // MARK: - Feature Access
+
+    static func featureFlags(wholesalerID: String) async throws -> [FeatureFlag] {
+        let response: FeatureListResponse = try await invoke(
+            "admin-feature-flags",
+            body: FeatureListRequest(wholesaler_id: wholesalerID)
+        )
+        return response.features ?? []
+    }
+
+    @discardableResult
+    static func setFeatureFlag(
+        wholesalerID: String,
+        featureKey: String,
+        enabled: Bool,
+        reason: String,
+        expectedVersion: Int
+    ) async throws -> Int {
+        let response: FeatureSetResponse = try await invoke(
+            "admin-feature-flags",
+            body: FeatureSetRequest(
+                wholesaler_id: wholesalerID,
+                feature_key: featureKey,
+                enabled: enabled,
+                reason: reason,
+                expected_version: expectedVersion
+            )
+        )
+        return response.version ?? 0
+    }
+
+    static func resetFeatureFlag(
+        wholesalerID: String,
+        featureKey: String,
+        reason: String,
+        expectedVersion: Int
+    ) async throws {
+        let _: FeatureSetResponse = try await invoke(
+            "admin-feature-flags",
+            body: FeatureResetRequest(
+                wholesaler_id: wholesalerID,
+                feature_key: featureKey,
+                reason: reason,
+                expected_version: expectedVersion
+            )
+        )
+    }
+
+    static func featureFlagAudit(
+        wholesalerID: String?,
+        page: Int = 0,
+        pageSize: Int = 25
+    ) async throws -> FeatureAuditPage {
+        try await invoke(
+            "admin-feature-flags",
+            body: FeatureAuditRequest(
+                wholesaler_id: wholesalerID,
+                page: page,
+                pageSize: pageSize
+            )
+        )
+    }
+
+    static func featureCatalog() async throws -> [FeatureCatalogItem] {
+        let response: FeatureCatalogListResponse = try await invoke(
+            "admin-feature-flags",
+            body: FeatureCatalogListRequest()
+        )
+        return response.catalog ?? []
+    }
+
+    static func setFeatureCatalog(
+        featureKey: String,
+        defaultEnabled: Bool?,
+        enforcementMode: String?,
+        reason: String
+    ) async throws {
+        let _: FeatureCatalogSetResponse = try await invoke(
+            "admin-feature-flags",
+            body: FeatureCatalogSetRequest(
+                feature_key: featureKey,
+                default_enabled: defaultEnabled,
+                enforcement_mode: enforcementMode,
+                reason: reason
+            )
+        )
+    }
+
     // MARK: - Transport
 
     private static var passwordHeader: [String: String] {
