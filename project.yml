@@ -35,7 +35,7 @@ targets:
         # So this is only the floor for local/device builds — keep it in sync
         # with the last upload rather than trusting it to drive one.
         # 1.0 (10) uploaded 2026-10-17; builds 1-9 are spent.
-        CURRENT_PROJECT_VERSION: "10"
+        CURRENT_PROJECT_VERSION: "11"
     info:
       path: AdminPanel/Info.plist
       properties:

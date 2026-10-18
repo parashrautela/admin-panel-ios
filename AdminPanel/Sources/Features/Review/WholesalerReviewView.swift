@@ -325,6 +325,7 @@ struct WholesalerReviewView: View {
                 inviterName: entity == .retailer ? submission.inviter_business_name : nil
             )
             BusinessCreditsView(entity: entity, businessID: submission.id)
+            if entity == .wholesaler { FeatureAccessView(wholesalerID: submission.id) }
         }
         .id("\(entity.rawValue):\(submission.id)")
     }

@@ -259,6 +259,7 @@ struct BusinessCreditsAndReferrals: View {
             BusinessReferralsView(wholesalerID: entity == .wholesaler ? submission.id : nil,
                 retailerID: entity == .retailer ? submission.id : nil,
                 inviterName: entity == .retailer ? submission.inviter_business_name : nil)
+            if entity == .wholesaler { FeatureAccessView(wholesalerID: submission.id) }
         }.id("\(entity.rawValue):\(submission.id)")
     }
 }
