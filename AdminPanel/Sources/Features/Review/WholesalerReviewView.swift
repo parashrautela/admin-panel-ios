@@ -3,6 +3,10 @@ import UIKit
 
 // Mirrors the web WholesalerReview screen, with the documents laid out for a
 // touch screen: every file is shown whole and opens full screen in the app.
+//
+// Styled to the Intercom admin look: a cream canvas, white hairline cards, a
+// charcoal primary action, white outline secondary actions, and danger-tinted
+// outlines for anything that rejects or bans a wholesaler.
 struct WholesalerReviewView: View {
     let entity: ReviewEntity
     let submissionId: String
@@ -41,15 +45,15 @@ struct WholesalerReviewView: View {
 
     var body: some View {
         ZStack {
-            LiquidBackground()
+            Color.canvas.ignoresSafeArea()
 
             Group {
                 if loading {
-                    centerMessage("Loading \(entity.label) data...", color: .gray500)
+                    centerMessage("Loading \(entity.label) data...", color: Color.inkMuted, showsSpinner: true)
                 } else if let submission {
                     content(submission)
                 } else {
-                    centerMessage("\(entity.label) not found", color: .red500)
+                    centerMessage("\(entity.label) not found", color: Color.danger)
                 }
             }
         }
@@ -75,12 +79,23 @@ struct WholesalerReviewView: View {
         }
     }
 
-    private func centerMessage(_ text: String, color: Color) -> some View {
+    private func centerMessage(_ text: String, color: Color, showsSpinner: Bool = false) -> some View {
         VStack {
             Spacer()
-            Text(text)
-                .font(.system(size: 15))
-                .foregroundColor(color)
+            VStack(spacing: 12) {
+                if showsSpinner {
+                    ProgressView()
+                        .tint(Color.inkMuted)
+                }
+                Text(text)
+                    .font(.system(size: 15))
+                    .foregroundColor(color)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(24)
+            .frame(maxWidth: 448)
+            .webCard()
+            .padding(16)
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -116,7 +131,6 @@ struct WholesalerReviewView: View {
             VStack(alignment: .leading, spacing: isCompact ? 20 : 24) {
                 backButton
                 header(submission)
-                BusinessCreditsAndReferrals(entity: entity, submission: submission)
 
                 // A fixed 320pt actions panel beside the review content
                 // doesn't leave enough room for either on phone width —
@@ -141,12 +155,12 @@ struct WholesalerReviewView: View {
         }
     }
 
-    /// Claimed details first, documents directly under them: the review is a
-    /// comparison of the two, so they belong within a scroll of each other.
+    /// Documents first, then referrals and credits, then the applicant details.
     private func reviewColumn(_ submission: Submission) -> some View {
         VStack(alignment: .leading, spacing: isCompact ? 20 : 24) {
-            detailsCard(submission)
             documentsCard(submission)
+            referralsAndCredits(submission)
+            detailsCard(submission)
             historyCard(submission)
         }
     }
@@ -161,7 +175,9 @@ struct WholesalerReviewView: View {
                 Text("Back")
                     .font(.system(size: 15, weight: .medium))
             }
-            .foregroundColor(.black)
+            .foregroundColor(Color.ink)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -180,16 +196,16 @@ struct WholesalerReviewView: View {
                 // line where it used to get lost.
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
                     Text(submission.displayName)
-                        .font(.system(size: isCompact ? 26 : 30, weight: .light))
-                        .foregroundColor(.gray900)
-                    StatusBadge(status: submission.status)
+                        .font(.system(size: isCompact ? 24 : 28, weight: .semibold))
+                        .foregroundColor(Color.ink)
+                    ReviewStatusBadge(status: submission.status)
                 }
 
                 // The date and the id chip together overflow phone width and
                 // wrap into a ragged two-line clump — stack them there.
                 let submitted = Text("Submitted \(submission.submittedDateTimeText)")
                     .font(.system(size: 14))
-                    .foregroundColor(.gray600)
+                    .foregroundColor(Color.inkMuted)
 
                 if isCompact {
                     VStack(alignment: .leading, spacing: 8) {
@@ -218,20 +234,20 @@ struct WholesalerReviewView: View {
             } label: {
                 DocumentPreview(document: logo)
                     .frame(width: size, height: size)
-                    .background(Color.gray100)
+                    .background(Color.surface2)
                     .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.gray200, lineWidth: 1))
+                    .overlay(Circle().stroke(Color.hairline, lineWidth: 1))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("View business logo")
         } else {
             Circle()
-                .fill(Color.gray900)
+                .fill(Color.ink)
                 .frame(width: size, height: size)
                 .overlay(
                     Text(submission.initial)
                         .font(.system(size: size / 3, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.onPrimary)
                 )
         }
     }
@@ -249,10 +265,17 @@ struct WholesalerReviewView: View {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 11, weight: .medium))
             }
-            .foregroundColor(.gray600)
+            .foregroundColor(Color.inkMuted)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
-            .background(Color.gray100, in: Capsule())
+            .background(Color.surface1, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(Color.hairline, lineWidth: 1)
+            )
+            // The chip itself stays compact; the tap target is padded to 44pt.
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Copy submission ID")
@@ -293,17 +316,29 @@ struct WholesalerReviewView: View {
         return fields
     }
 
+    /// Referrals, then credits, for the business being reviewed.
+    private func referralsAndCredits(_ submission: Submission) -> some View {
+        VStack(alignment: .leading, spacing: isCompact ? 20 : 24) {
+            BusinessReferralsView(
+                wholesalerID: entity == .wholesaler ? submission.id : nil,
+                retailerID: entity == .retailer ? submission.id : nil,
+                inviterName: entity == .retailer ? submission.inviter_business_name : nil
+            )
+            BusinessCreditsView(entity: entity, businessID: submission.id)
+        }
+        .id("\(entity.rawValue):\(submission.id)")
+    }
+
+    /// One row per field: a muted label above a medium value, with a hairline
+    /// between rows. Every row has the same rhythm, so the card reads evenly.
     private func detailsCard(_ submission: Submission) -> some View {
-        sectionCard("Applicant details") {
-            LazyVGrid(
-                columns: Array(
-                    repeating: GridItem(.flexible(), spacing: 20, alignment: .topLeading),
-                    count: isCompact ? 1 : 2
-                ),
-                alignment: .leading,
-                spacing: 20
-            ) {
-                ForEach(detailFields(submission)) { field in
+        let fields = detailFields(submission)
+        return sectionCard("Applicant details") {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(fields.enumerated()), id: \.element.id) { index, field in
+                    if index > 0 {
+                        Divider().overlay(Color.hairlineSoft).padding(.vertical, 14)
+                    }
                     detailField(field)
                 }
             }
@@ -311,16 +346,15 @@ struct WholesalerReviewView: View {
     }
 
     private func detailField(_ field: DetailField) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(field.label)
-                .font(.system(size: 12, weight: .medium))
-                .kerning(0.6)
-                .foregroundColor(.gray500)
+        VStack(alignment: .leading, spacing: 4) {
+            Text(field.label.capitalized)
+                .font(.system(size: 13))
+                .foregroundColor(Color.inkMuted)
 
             HStack(spacing: 8) {
                 Text(field.value)
-                    .font(.system(size: 15, weight: .medium, design: field.monospaced ? .monospaced : .default))
-                    .foregroundColor(.gray900)
+                    .font(.system(size: 16, weight: .medium, design: field.monospaced ? .monospaced : .default))
+                    .foregroundColor(Color.ink)
                     .textSelection(.enabled)
 
                 if field.copyable {
@@ -329,7 +363,9 @@ struct WholesalerReviewView: View {
                     } label: {
                         Image(systemName: "doc.on.doc")
                             .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.gray500)
+                            .foregroundColor(Color.inkMuted)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Copy \(field.label.lowercased())")
@@ -337,6 +373,13 @@ struct WholesalerReviewView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12, weight: .medium))
+            .kerning(0.6)
+            .foregroundColor(Color.inkMuted)
     }
 
     /// `583485235823` is a wall of digits to check by eye; `5834 8523 5823`
@@ -368,15 +411,15 @@ struct WholesalerReviewView: View {
         return sectionCard("Documents", accessory: {
             Text("\(providedCount) of \(all.count) provided")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(complete ? .gray600 : .yellow900)
+                .foregroundColor(complete ? Color.inkMuted : Color.warning)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(complete ? Color.gray100 : Color.yellow100, in: Capsule())
+                .background(complete ? Color.surface2 : Color.warningBg, in: Capsule())
         }) {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Tap a document to open it full screen — pinch or double-tap to zoom, swipe for the next one.")
                     .font(.system(size: 13))
-                    .foregroundColor(.gray500)
+                    .foregroundColor(Color.inkMuted)
                     .fixedSize(horizontal: false, vertical: true)
 
                 // Adaptive rather than a fixed column count: beside a 320pt
@@ -414,22 +457,16 @@ struct WholesalerReviewView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     if !requested.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("DOCUMENTS ASKED FOR")
-                                .font(.system(size: 12, weight: .medium))
-                                .kerning(0.6)
-                                .foregroundColor(.gray500)
+                            fieldLabel("DOCUMENTS ASKED FOR")
                             FlowChips(items: requested)
                         }
                     }
                     if !reason.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("REASON GIVEN")
-                                .font(.system(size: 12, weight: .medium))
-                                .kerning(0.6)
-                                .foregroundColor(.gray500)
+                            fieldLabel("REASON GIVEN")
                             Text(reason)
                                 .font(.system(size: 14))
-                                .foregroundColor(.gray900)
+                                .foregroundColor(Color.ink)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
@@ -456,7 +493,7 @@ struct WholesalerReviewView: View {
             HStack(spacing: 12) {
                 Text(title)
                     .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(.gray900)
+                    .foregroundColor(Color.ink)
                 Spacer(minLength: 0)
                 accessory()
             }
@@ -464,11 +501,7 @@ struct WholesalerReviewView: View {
         }
         .padding(isCompact ? 20 : 28)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray200.opacity(0.6), lineWidth: 1)
-        )
+        .webCard()
     }
 
     private func copy(_ value: String, named name: String) {
@@ -482,17 +515,28 @@ struct WholesalerReviewView: View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Actions")
                 .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.gray900)
+                .foregroundColor(Color.ink)
                 .padding(.bottom, 8)
             Text("Review all documents before taking action")
                 .font(.system(size: 14))
-                .foregroundColor(.gray500)
+                .foregroundColor(Color.inkMuted)
                 .padding(.bottom, 32)
 
             VStack(alignment: .leading, spacing: 12) {
-                actionBlock(caption: "\(entity.label) gets immediate access") {
-                    primaryButton("Verify & Approve", icon: "checkmark") {
-                        run { try await AdminAPI.verifySubmission(entity: entity, id: submission.id) }
+                // An approved business is not approved again. Its first action is to
+                // go back over the documents; the approve button is only for pending ones.
+                if submission.status == .verified {
+                    actionBlock(caption: "Already verified. Check the documents again if needed.") {
+                        primaryButton("Review documents", icon: "doc.text.magnifyingglass") {
+                            let all = documents(submission)
+                            if let first = all.first { openViewer(first, in: all) }
+                        }
+                    }
+                } else {
+                    actionBlock(caption: "\(entity.label) gets immediate access") {
+                        primaryButton("Verify & Approve", icon: "checkmark") {
+                            run { try await AdminAPI.verifySubmission(entity: entity, id: submission.id) }
+                        }
                     }
                 }
 
@@ -512,9 +556,9 @@ struct WholesalerReviewView: View {
                     resubmissionPanel(submission)
                 }
 
-                Divider().overlay(Color.gray200).padding(.vertical, 20)
+                Divider().overlay(Color.hairline).padding(.vertical, 20)
 
-                outlineButton("Reject Application", icon: "xmark", borderColor: .gray900) {
+                outlineButton("Reject Application", icon: "xmark", variant: .destructive) {
                     withAnimation { showRejection.toggle() }
                 }
 
@@ -522,19 +566,9 @@ struct WholesalerReviewView: View {
                     rejectionPanel(submission)
                 }
 
-                Button {
+                outlineButton("Ban Permanently", icon: "nosign", variant: .destructive) {
                     showBanModal = true
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "nosign")
-                            .font(.system(size: 13, weight: .medium))
-                        Text("Ban Permanently")
-                    }
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.gray900)
                 }
-                .buttonStyle(.plain)
-                .frame(maxWidth: .infinity)
                 .padding(.top, 12)
 
                 notesSection(submission)
@@ -543,8 +577,8 @@ struct WholesalerReviewView: View {
             .disabled(actionLoading)
             .opacity(actionLoading ? 0.6 : 1)
         }
-        .padding(24)
-        .glassEffect(.regular.tint(.white.opacity(0.35)), in: RoundedRectangle(cornerRadius: 20))
+        .padding(20)
+        .webCard()
     }
 
     private func actionBlock(caption: String, @ViewBuilder button: () -> some View) -> some View {
@@ -552,7 +586,7 @@ struct WholesalerReviewView: View {
             button()
             Text(caption)
                 .font(.system(size: 12))
-                .foregroundColor(.gray500)
+                .foregroundColor(Color.inkMuted)
                 .padding(.horizontal, 4)
         }
     }
@@ -565,18 +599,14 @@ struct WholesalerReviewView: View {
                 Text(title)
                     .font(.system(size: 15, weight: .medium))
             }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
         }
-        .buttonStyle(.glassProminent)
-        .tint(.black)
+        .buttonStyle(ReviewButtonStyle(variant: .primary))
     }
 
     private func outlineButton(
         _ title: String,
         icon: String,
-        borderColor: Color = .gray300,
+        variant: ReviewButtonVariant = .secondary,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -586,19 +616,17 @@ struct WholesalerReviewView: View {
                 Text(title)
                     .font(.system(size: 15, weight: .medium))
             }
-            .foregroundColor(.gray900)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
         }
-        .buttonStyle(.glass)
+        .buttonStyle(ReviewButtonStyle(variant: variant))
     }
 
     private func resubmissionPanel(_ submission: Submission) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Select documents to resubmit:")
                 .font(.system(size: 14, weight: .medium))
+                .foregroundColor(Color.ink)
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 0) {
                 ForEach(resubmissionDocs, id: \.self) { doc in
                     Button {
                         if selectedDocuments.contains(doc) {
@@ -610,11 +638,14 @@ struct WholesalerReviewView: View {
                         HStack(spacing: 10) {
                             Image(systemName: selectedDocuments.contains(doc) ? "checkmark.square.fill" : "square")
                                 .font(.system(size: 17))
-                                .foregroundColor(selectedDocuments.contains(doc) ? .black : .gray400)
+                                .foregroundColor(selectedDocuments.contains(doc) ? Color.ink : Color.inkTertiary)
                             Text(doc)
                                 .font(.system(size: 14))
-                                .foregroundColor(.gray900)
+                                .foregroundColor(Color.ink)
+                            Spacer(minLength: 0)
                         }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -623,6 +654,7 @@ struct WholesalerReviewView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Reason (required)")
                     .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(Color.ink)
                 textArea($resubmissionReason, placeholder: "Explain what needs to be corrected...", height: 84)
             }
 
@@ -638,33 +670,26 @@ struct WholesalerReviewView: View {
             } label: {
                 Text("Send Request")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
             }
-            .buttonStyle(.glassProminent)
-            .tint(.black)
+            .buttonStyle(ReviewButtonStyle(variant: .primary))
             .disabled(resubmissionReason.isEmpty || selectedDocuments.isEmpty)
             .opacity(resubmissionReason.isEmpty || selectedDocuments.isEmpty ? 0.5 : 1)
         }
-        .padding(20)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray200.opacity(0.6), lineWidth: 1)
-        )
+        .insetPanel()
     }
 
     private func rejectionPanel(_ submission: Submission) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             if entity == .retailer {
                 Text("Final rejection ends any new invitation gift and releases its funding. Use Request Resubmission when documents need corrections.")
-                    .font(.system(size: 13)).foregroundColor(.gray600)
+                    .font(.system(size: 13))
+                    .foregroundColor(Color.inkMuted)
             }
             Text("Select rejection reason:")
                 .font(.system(size: 14, weight: .medium))
+                .foregroundColor(Color.ink)
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 0) {
                 ForEach(rejectionReasons, id: \.self) { reason in
                     Button {
                         rejectionReason = reason
@@ -672,13 +697,15 @@ struct WholesalerReviewView: View {
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: rejectionReason == reason ? "largecircle.fill.circle" : "circle")
                                 .font(.system(size: 16))
-                                .foregroundColor(rejectionReason == reason ? .black : .gray400)
+                                .foregroundColor(rejectionReason == reason ? Color.ink : Color.inkTertiary)
                                 .padding(.top, 1)
                             Text(reason)
                                 .font(.system(size: 14))
-                                .foregroundColor(.gray900)
+                                .foregroundColor(Color.ink)
                                 .multilineTextAlignment(.leading)
                         }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -687,6 +714,7 @@ struct WholesalerReviewView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Additional notes (optional)")
                     .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(Color.ink)
                 textArea($rejectionNotes, placeholder: "Add context...", height: 84)
             }
 
@@ -696,34 +724,25 @@ struct WholesalerReviewView: View {
             } label: {
                 Text("Confirm Rejection")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
             }
-            .buttonStyle(.glassProminent)
-            .tint(.black)
+            .buttonStyle(ReviewButtonStyle(variant: .destructive))
             .disabled(rejectionReason.isEmpty)
             .opacity(rejectionReason.isEmpty ? 0.5 : 1)
         }
-        .padding(20)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray200.opacity(0.6), lineWidth: 1)
-        )
+        .insetPanel()
     }
 
     private func notesSection(_ submission: Submission) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Divider().overlay(Color.gray200)
+            Divider().overlay(Color.hairline)
             Text("Internal notes")
                 .font(.system(size: 14, weight: .medium))
+                .foregroundColor(Color.ink)
                 .padding(.top, 12)
             textArea(
                 $adminNotes,
                 placeholder: "Add notes (not visible to \(entity.label.lowercased()))...",
-                height: 104,
-                background: .gray50
+                height: 104
             )
             Button {
                 actionLoading = true
@@ -739,35 +758,34 @@ struct WholesalerReviewView: View {
             } label: {
                 Text("Save note")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.black)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ReviewButtonStyle(variant: .secondary))
         }
     }
 
     private func textArea(
         _ text: Binding<String>,
         placeholder: String,
-        height: CGFloat,
-        background: Color = .white
+        height: CGFloat
     ) -> some View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: text)
                 .font(.system(size: 14))
+                .foregroundColor(Color.ink)
                 .scrollContentBackground(.hidden)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
                 .frame(height: height)
-                .background(background)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .background(Color.surface1)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray300, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(Color.hairline, lineWidth: 1)
                 )
             if text.wrappedValue.isEmpty {
                 Text(placeholder)
                     .font(.system(size: 14))
-                    .foregroundColor(.gray400)
+                    .foregroundColor(Color.inkTertiary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 14)
                     .allowsHitTesting(false)
@@ -779,27 +797,27 @@ struct WholesalerReviewView: View {
 
     private func banModal(_ submission: Submission) -> some View {
         ZStack {
-            Color.black.opacity(0.4)
+            Color.ink.opacity(0.35)
                 .ignoresSafeArea()
                 .onTapGesture { showBanModal = false }
 
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top, spacing: 16) {
                     Circle()
-                        .fill(Color.gray100)
+                        .fill(Color.dangerBg)
                         .frame(width: 48, height: 48)
                         .overlay(
                             Image(systemName: "exclamationmark.circle")
                                 .font(.system(size: 22))
-                                .foregroundColor(.gray900)
+                                .foregroundColor(Color.danger)
                         )
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Are you sure?")
                             .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(.gray900)
+                            .foregroundColor(Color.ink)
                         Text("This will permanently ban \(submission.displayName) from the platform. This action cannot be undone.")
                             .font(.system(size: 14))
-                            .foregroundColor(.gray600)
+                            .foregroundColor(Color.inkMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -811,11 +829,8 @@ struct WholesalerReviewView: View {
                     } label: {
                         Text("Cancel")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.gray900)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 6)
                     }
-                    .buttonStyle(.glass)
+                    .buttonStyle(ReviewButtonStyle(variant: .secondary))
 
                     Button {
                         showBanModal = false
@@ -823,18 +838,14 @@ struct WholesalerReviewView: View {
                     } label: {
                         Text("Yes, Ban User")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 6)
                     }
-                    .buttonStyle(.glassProminent)
-                    .tint(.black)
+                    .buttonStyle(ReviewButtonStyle(variant: .destructive))
                     .disabled(actionLoading)
                 }
             }
             .padding(32)
-            .glassEffect(.regular.tint(.white.opacity(0.5)), in: RoundedRectangle(cornerRadius: 20))
             .frame(maxWidth: 448)
+            .webCard()
             .padding(16)
         }
     }
@@ -881,7 +892,7 @@ struct DocumentTile: View {
                 // the rest of the row.
                 Text(document.label)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(document.isProvided ? .gray900 : .gray500)
+                    .foregroundColor(document.isProvided ? Color.ink : Color.inkMuted)
                     .lineLimit(1)
                     .layoutPriority(1)
                 Spacer(minLength: 0)
@@ -908,64 +919,71 @@ struct DocumentTile: View {
             .frame(maxWidth: .infinity)
             .aspectRatio(4.0 / 3.0, contentMode: .fit)
             .overlay { content() }
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private var preview: some View {
-        box(.gray100) {
+        box(Color.surface2) {
             DocumentPreview(document: document) { kind = $0.kindLabel }
                 .padding(6)
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.gray200, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.hairline, lineWidth: 1)
         )
         .overlay(alignment: .topTrailing) {
             Image(systemName: "arrow.up.left.and.arrow.down.right")
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(Color.onPrimary)
                 .padding(7)
-                .background(.black.opacity(0.45), in: Circle())
+                .background(Color.ink.opacity(0.6), in: Circle())
                 .padding(8)
         }
-        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private var missing: some View {
-        box(.gray50) {
+        box(Color.surface1) {
             VStack(spacing: 8) {
                 Image(systemName: "doc")
                     .font(.system(size: 22))
                 Text("Not provided")
                     .font(.system(size: 13))
             }
-            .foregroundColor(.gray400)
+            .foregroundColor(Color.inkSubtle)
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.gray300, style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.inkTertiary, style: StrokeStyle(lineWidth: 1, dash: [6, 4]))
         )
     }
 
     @ViewBuilder
     private var badge: some View {
         if !document.isProvided {
-            chip("Missing", background: .yellow100, foreground: .yellow900)
+            chip("Missing", background: Color.warningBg, foreground: Color.warning, dot: Color.warning)
         } else if let kind {
-            chip(kind, background: .gray100, foreground: .gray600)
+            chip(kind, background: Color.surface2, foreground: Color.inkMuted)
         }
     }
 
-    private func chip(_ text: String, background: Color, foreground: Color) -> some View {
-        Text(text)
-            .font(.system(size: 11, weight: .medium))
-            .foregroundColor(foreground)
-            // The label next to it claims the row's width first, which leaves
-            // the chip narrow enough to wrap "Missing" mid-word.
-            .fixedSize()
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(background, in: Capsule())
+    private func chip(_ text: String, background: Color, foreground: Color, dot: Color? = nil) -> some View {
+        HStack(spacing: 6) {
+            if let dot {
+                Circle()
+                    .fill(dot)
+                    .frame(width: 6, height: 6)
+            }
+            Text(text)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(foreground)
+        }
+        // The label next to it claims the row's width first, which leaves
+        // the chip narrow enough to wrap "Missing" mid-word.
+        .fixedSize()
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(background, in: Capsule())
     }
 }
 
@@ -982,10 +1000,10 @@ struct FlowChips: View {
             ForEach(items, id: \.self) { item in
                 Text(item)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.gray700)
+                    .foregroundColor(Color.ink)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Color.gray100, in: Capsule())
+                    .background(Color.surface2, in: Capsule())
             }
         }
     }
@@ -1042,6 +1060,107 @@ struct FlowLayout: Layout {
         }
         if !current.indices.isEmpty { rows.append(current) }
         return rows
+    }
+}
+
+/// Status pill for the header: a small coloured dot and the label on a tinted
+/// capsule. Colours follow the Intercom status palette.
+fileprivate struct ReviewStatusBadge: View {
+    let status: WholesalerStatus
+
+    private var foreground: Color {
+        switch status {
+        case .pending: return Color.inkMuted
+        case .on_hold: return Color.info
+        case .verified: return Color.success
+        case .resubmission_required: return Color.warning
+        case .rejected, .banned: return Color.danger
+        }
+    }
+
+    private var background: Color {
+        switch status {
+        case .pending: return Color.surface2
+        case .on_hold: return Color.infoBg
+        case .verified: return Color.successBg
+        case .resubmission_required: return Color.warningBg
+        case .rejected, .banned: return Color.dangerBg
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(foreground)
+                .frame(width: 7, height: 7)
+            Text(status.label)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(foreground)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(background, in: Capsule())
+    }
+}
+
+/// The review screen's buttons: charcoal for the one primary action, white
+/// with a hairline for the rest, and danger-tinted outlines for anything that
+/// rejects or bans a wholesaler. Corners are 10pt; nothing is pill-shaped.
+fileprivate enum ReviewButtonVariant {
+    case primary
+    case secondary
+    case destructive
+}
+
+fileprivate struct ReviewButtonStyle: ButtonStyle {
+    var variant: ReviewButtonVariant = .secondary
+
+    func makeBody(configuration: Configuration) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 10, style: .continuous)
+        configuration.label
+            .foregroundColor(foreground)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.horizontal, 16)
+            .background(fill, in: shape)
+            .overlay(shape.stroke(border, lineWidth: 1))
+            .contentShape(shape)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+    }
+
+    private var foreground: Color {
+        switch variant {
+        case .primary: return Color.onPrimary
+        case .secondary: return Color.ink
+        case .destructive: return Color.danger
+        }
+    }
+
+    private var fill: Color {
+        switch variant {
+        case .primary: return Color.ink
+        case .secondary, .destructive: return Color.surface1
+        }
+    }
+
+    private var border: Color {
+        switch variant {
+        case .primary: return Color.ink
+        case .secondary: return Color.hairline
+        case .destructive: return Color.danger.opacity(0.35)
+        }
+    }
+}
+
+fileprivate extension View {
+    /// A form nested inside a white card: canvas-toned, hairline edge, 12pt corners.
+    func insetPanel() -> some View {
+        self
+            .padding(20)
+            .background(Color.canvas, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.hairline, lineWidth: 1)
+            )
     }
 }
 

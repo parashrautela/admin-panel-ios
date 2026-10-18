@@ -19,87 +19,161 @@ struct BusinessCreditsView: View {
     @State private var pending: CreditAllowanceChange?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Credits").font(.headline)
+                Text("Credits")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Color.ink)
                 Spacer()
-                Button("Refresh") { Task { await load() } }.disabled(loading || saving || editing)
+                // Plain icon, matching the referrals card header.
+                Button { Task { await load() } } label: {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(Color.inkMuted)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(loading || saving || editing)
+                .accessibilityLabel("Refresh credits")
             }
             if loading { ProgressView("Loading credits…") }
-            if let notice { Text(notice).font(.subheadline).foregroundStyle(.green).accessibilityIdentifier("credit-save-notice") }
-            if let error { Text(error).font(.subheadline).foregroundStyle(.red) }
+            if let notice {
+                Text(notice)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.success)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.successBg, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .accessibilityIdentifier("credit-save-notice")
+            }
+            if let error {
+                Text(error)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.danger)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.dangerBg, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
             if let report, let item = report.items.first {
-                LabeledContent("Available now", value: item.available.formatted())
-                LabeledContent("Credits per 24 hours", value: item.daily_allowance == 0 ? "Paused" : item.daily_allowance.formatted())
+                HStack(alignment: .top, spacing: 16) {
+                    figure("Available now", item.available.formatted())
+                    figure("Credits per 24 hours", item.daily_allowance == 0 ? "Paused" : item.daily_allowance.formatted())
+                }
                 TimelineView(.periodic(from: .now, by: 1)) { _ in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Next refill").font(.subheadline).foregroundStyle(.secondary)
-                        Text(refillText(item)).font(.subheadline)
+                        Text("Next refill")
+                            .font(.caption)
+                            .foregroundStyle(Color.inkMuted)
+                        Text(refillText(item))
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(Color.ink)
+                            .monospacedDigit()
                         if let date = AdminRefillClock.date(item.next_refill_at) {
-                            Text(date.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
+                            Text(date.formatted(date: .abbreviated, time: .shortened))
+                                .font(.caption)
+                                .foregroundStyle(Color.inkMuted)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                    .background(Color.canvas, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
                 if let current = item.current_allowance, current != item.daily_allowance {
-                    Text("Current allowance: \(current.formatted()). The new amount starts at the next refill.").font(.caption).foregroundStyle(.secondary)
+                    note("Current allowance: \(current.formatted()). The new amount starts at the next refill.")
                 }
-                if entity == .retailer { Text("Staff share this store’s credits.").font(.caption).foregroundStyle(.secondary) }
+                if entity == .retailer { note("Staff share this store’s credits.") }
                 if !report.program_active {
-                    Text("Recurring credits are not active. An allocation can be scheduled for activation.").font(.caption).foregroundStyle(.secondary)
+                    note("Recurring credits are not active. An allocation can be scheduled for activation.")
                 }
                 if item.verification_status == "verified" {
                     if editing { editor(item) }
                     else {
-                        ViewThatFits(in: .horizontal) {
-                            HStack { actions(item, defaultAmount: report.default_allowance) }
-                            VStack(alignment: .leading, spacing: 12) { actions(item, defaultAmount: report.default_allowance) }
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 8)], alignment: .leading, spacing: 8) {
+                            Button("Give credits now") { begin(amount: 0, reset: false, grant: true) }
+                                .buttonStyle(CreditsActionButtonStyle(kind: .secondary))
+                            Button("Change credits") { begin(amount: item.daily_allowance, reset: false) }
+                                .buttonStyle(CreditsActionButtonStyle(kind: .primary))
+                            Button("Pause credits") { begin(amount: 0, reset: false) }
+                                .buttonStyle(CreditsActionButtonStyle(kind: .secondary))
+                            Button("Use default (\(report.default_allowance.formatted()))") { begin(amount: report.default_allowance, reset: true) }
+                                .buttonStyle(CreditsActionButtonStyle(kind: .secondary))
                         }
-                        .buttonStyle(.bordered)
                     }
-                } else { Text("Verify this business before changing credits.").font(.subheadline).foregroundStyle(.secondary) }
+                } else { note("Verify this business before changing credits.", font: .subheadline) }
                 DisclosureGroup("Balance details") {
                     LabeledContent("Admin bonus", value: (item.admin_available ?? 0).formatted())
                     LabeledContent("Recurring", value: item.recurring_available.formatted())
                     LabeledContent("Referral gifts", value: item.gift_available.formatted())
                     LabeledContent("Purchased", value: item.paid_available.formatted())
-                }.font(.subheadline)
+                }
+                .font(.subheadline)
+                .tint(Color.ink)
+                .foregroundStyle(Color.ink)
             } else if !loading {
-                Text(error == nil ? "No credit account information available." : "Refresh to try again.").font(.subheadline).foregroundStyle(.secondary)
+                note(error == nil ? "No credit account information available." : "Refresh to try again.", font: .subheadline)
             }
         }
         .padding(16)
-        .background(.background, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.gray.opacity(0.2)))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .webCard()
         .task(id: "\(entity.rawValue):\(businessID)") { await load() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active && !editing && !saving { Task { await load() } }
         }
     }
 
-    @ViewBuilder private func actions(_ item: CreditAllowanceItem, defaultAmount: Int) -> some View {
-        Button("Give credits now") { begin(amount: 0, reset: false, grant: true) }
-        Button("Change credits") { begin(amount: item.daily_allowance, reset: false) }
-        Button("Pause credits") { begin(amount: 0, reset: false) }
-        Button("Use default (\(defaultAmount.formatted()))") { begin(amount: defaultAmount, reset: true) }
+    private func figure(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(Color.inkMuted)
+            Text(value)
+                .font(.system(size: 34, weight: .medium))
+                .foregroundStyle(Color.ink)
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
+
+    private func note(_ text: String, font: Font = .caption) -> some View {
+        Text(text)
+            .font(font)
+            .foregroundStyle(Color.inkMuted)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func editor(_ item: CreditAllowanceItem) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(grantNow ? "Give credits now" : reset ? "Restore the default allowance" : "Change the next allowance").font(.subheadline.bold())
-            TextField(grantNow ? "Credits to send now" : "Credits per 24 hours", text: $amount).keyboardType(.numberPad)
-                .textFieldStyle(.roundedBorder).disabled(reset || saving || pending != nil)
-                .accessibilityLabel(grantNow ? "Credits to send now" : "Credits per 24 hours").accessibilityIdentifier("credit-amount")
+            Text(grantNow ? "Give credits now" : reset ? "Restore the default allowance" : "Change the next allowance")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color.ink)
+            TextField(grantNow ? "Credits to send now" : "Credits per 24 hours", text: $amount)
+                .keyboardType(.numberPad)
+                .creditsFieldChrome()
+                .disabled(reset || saving || pending != nil)
+                .accessibilityLabel(grantNow ? "Credits to send now" : "Credits per 24 hours")
+                .accessibilityIdentifier("credit-amount")
             TextField("Reason (required)", text: $reason, axis: .vertical)
-                .textFieldStyle(.roundedBorder).lineLimit(2...4).disabled(saving || pending != nil)
+                .lineLimit(2...4)
+                .creditsFieldChrome()
+                .disabled(saving || pending != nil)
                 .accessibilityIdentifier("credit-reason")
-            Text(grantNow ? "Adds a one-time bonus immediately, available until spent. The allowance and refill time stay the same." : "Applies at the next refill. Current credits remain available.").font(.caption).foregroundStyle(.secondary)
-            HStack {
+            note(grantNow ? "Adds a one-time bonus immediately, available until spent. The allowance and refill time stay the same." : "Applies at the next refill. Current credits remain available.")
+            HStack(spacing: 8) {
                 Button(pending == nil ? (grantNow ? "Send credits now" : "Save credits") : "Retry same request") { Task { await save(item) } }
-                    .buttonStyle(.borderedProminent).disabled(saving || reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .buttonStyle(CreditsActionButtonStyle(kind: .primary, fillsWidth: false))
+                    .disabled(saving || reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .accessibilityIdentifier("credit-save")
                 Button("Cancel") {
                     editing = false; pending = nil
                     Task { await load() }
-                }.disabled(saving)
+                }
+                .buttonStyle(CreditsActionButtonStyle(kind: .secondary, fillsWidth: false))
+                .disabled(saving)
                 if saving { ProgressView() }
             }
         }
@@ -163,5 +237,65 @@ struct BusinessCreditsView: View {
             }
             saving = false
         }
+    }
+}
+
+// Text field chrome: white field, hairline border, 10pt radius, 44pt minimum height.
+private extension View {
+    func creditsFieldChrome() -> some View {
+        self
+            .textFieldStyle(.plain)
+            .font(.system(size: 16))
+            .foregroundStyle(Color.ink)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .background(Color.surface1, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(Color.hairline, lineWidth: 1)
+            )
+    }
+}
+
+// Primary: charcoal fill with white text. Secondary: white fill with hairline border.
+private struct CreditsActionButtonStyle: ButtonStyle {
+    enum Kind { case primary, secondary }
+    var kind: Kind
+    var fillsWidth: Bool = true
+
+    func makeBody(configuration: Configuration) -> some View {
+        CreditsActionButtonBody(configuration: configuration, kind: kind, fillsWidth: fillsWidth)
+    }
+}
+
+private struct CreditsActionButtonBody: View {
+    let configuration: ButtonStyleConfiguration
+    let kind: CreditsActionButtonStyle.Kind
+    let fillsWidth: Bool
+    @Environment(\.isEnabled) private var isEnabled
+
+    private var isPrimary: Bool { kind == .primary }
+
+    var body: some View {
+        // Same chrome as the dashboard buttons: one 44pt height, 8pt radius, one weight.
+        // Long labels shrink slightly rather than wrapping onto a second line.
+        configuration.label
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(isPrimary ? Color.onPrimary : Color.ink)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .padding(.horizontal, 12)
+            .frame(height: 44)
+            .frame(maxWidth: fillsWidth ? CGFloat.infinity : nil)
+            .background(isPrimary ? Color.ink : Color.surface1, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay {
+                if !isPrimary {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(Color.hairline, lineWidth: 1)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.45)
     }
 }

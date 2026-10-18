@@ -174,11 +174,11 @@ struct DocumentPreview: View {
                         .font(.system(size: 12))
                         .multilineTextAlignment(.center)
                 }
-                .foregroundColor(.gray500)
+                .foregroundColor(Color.inkMuted)
                 .padding(8)
             } else {
                 ProgressView()
-                    .tint(.gray400)
+                    .tint(Color.inkTertiary)
             }
         }
         .task(id: document.url) { await load() }
@@ -227,6 +227,9 @@ struct DocumentViewerRequest: Identifiable {
 /// close. A PDF gets PDFKit's own paging view, which brings its own zoom and
 /// scrolling — the swipe shortcuts stand aside for it, so its document is
 /// changed from the thumbnail strip and closed with the button.
+///
+/// Presented on the Intercom canvas: each document sits in a white hairline
+/// card, the same treatment as the review screen's cards.
 struct DocumentViewer: View {
     let documents: [ReviewDocument]
 
@@ -256,7 +259,7 @@ struct DocumentViewer: View {
 
     var body: some View {
         ZStack {
-            Color.black
+            Color.canvas
                 .opacity(backdropOpacity)
                 .ignoresSafeArea()
 
@@ -285,11 +288,11 @@ struct DocumentViewer: View {
             VStack(spacing: 2) {
                 Text(documents[selection].label)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.ink)
                 if documents.count > 1 {
                     Text("\(selection + 1) of \(documents.count)")
                         .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(Color.inkMuted)
                 }
             }
             .contentTransition(.opacity)
@@ -304,16 +307,23 @@ struct DocumentViewer: View {
         .opacity(backdropOpacity)
     }
 
+    /// A clear, bordered square on the canvas, sized to the 44pt touch minimum.
     private var closeButton: some View {
         Button {
             dismiss()
         } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 36, height: 36)
-                .background(.white.opacity(0.15), in: Circle())
+                .foregroundColor(Color.ink)
+                .frame(width: 44, height: 44)
+                .background(Color.surface1, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(Color.hairline, lineWidth: 1)
+                )
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .accessibilityLabel("Close document")
     }
 
@@ -337,6 +347,16 @@ struct DocumentViewer: View {
                 }
             }
         )
+        // The document sits in a white hairline card on the canvas.
+        .padding(12)
+        .background(Color.surface1, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.hairline, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
         .id(documents[selection].id)
         .transition(.opacity)
         .offset(x: dragOffset.width * 0.35, y: max(dragOffset.height, 0))
@@ -387,20 +407,20 @@ struct DocumentViewer: View {
                     show(index)
                 } label: {
                     VStack(spacing: 6) {
-                        Color.white.opacity(0.08)
+                        Color.surface1
                             .frame(width: 60, height: 60)
                             .overlay { DocumentPreview(document: document) }
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                             .overlay {
-                                RoundedRectangle(cornerRadius: 8)
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
                                     .stroke(
-                                        index == selection ? Color.white : .white.opacity(0.2),
+                                        index == selection ? Color.ink : Color.hairline,
                                         lineWidth: index == selection ? 2 : 1
                                     )
                             }
                         Text(document.label)
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(index == selection ? .white : .white.opacity(0.6))
+                            .foregroundColor(index == selection ? Color.ink : Color.inkMuted)
                             .lineLimit(1)
                     }
                     // Wide enough for "GST Certificate", the longest label,
@@ -452,13 +472,13 @@ private struct ViewerPage: View {
                         .font(.system(size: 15, weight: .medium))
                     Text(failure)
                         .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(Color.inkMuted)
                 }
-                .foregroundColor(.white)
+                .foregroundColor(Color.ink)
                 .multilineTextAlignment(.center)
                 .padding(24)
             } else {
-                ProgressView().tint(.white)
+                ProgressView().tint(Color.ink)
             }
         }
         .task(id: document.url) { await load() }
@@ -594,7 +614,8 @@ private struct PDFPageView: UIViewRepresentable {
         view.autoScales = true
         view.displayMode = .singlePageContinuous
         view.displayDirection = .vertical
-        view.backgroundColor = .black
+        // Gutters between pages sit on the neutral tone of the card's edge.
+        view.backgroundColor = UIColor(Color.surface2)
         view.document = document
         return view
     }

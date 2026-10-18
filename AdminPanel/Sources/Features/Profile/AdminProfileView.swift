@@ -18,7 +18,7 @@ struct AdminProfileView: View {
 
     var body: some View {
         ZStack {
-            LiquidBackground()
+            Color.canvas
                 .ignoresSafeArea()
 
             ScrollView {
@@ -26,12 +26,12 @@ struct AdminProfileView: View {
                     profileCard
 
                     if isCompact {
-                        VStack(spacing: 20) {
+                        VStack(spacing: 16) {
                             sessionCard
                             appInformationCard
                         }
                     } else {
-                        HStack(alignment: .top, spacing: 20) {
+                        HStack(alignment: .top, spacing: 16) {
                             sessionCard
                             appInformationCard
                         }
@@ -68,80 +68,78 @@ struct AdminProfileView: View {
     }
 
     private var profileNavigationBar: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 10) {
             Button {
                 dismiss()
             } label: {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.gray900)
-                    .frame(width: 36, height: 36)
-                    .contentShape(Circle())
+                    .foregroundStyle(Color.ink)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Back")
 
             Text("Profile")
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.gray900)
+                .foregroundStyle(Color.ink)
 
             Spacer()
 
             Text("ADMIN")
                 .font(.system(size: 11, weight: .semibold))
                 .tracking(0.8)
-                .foregroundColor(.gray600)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(Color.gray100, in: Capsule())
+                .foregroundStyle(Color.inkMuted)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.surface2, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .glassEffect(.regular, in: Capsule())
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
         .frame(maxWidth: 900)
         .frame(maxWidth: .infinity)
+        .background(Color.canvas.ignoresSafeArea(edges: .top))
     }
 
     private var profileCard: some View {
         HStack(spacing: isCompact ? 18 : 24) {
             Circle()
-                .fill(Color.black)
+                .fill(Color.ink)
                 .frame(width: isCompact ? 72 : 88, height: isCompact ? 72 : 88)
                 .overlay {
                     Text("A")
                         .font(.system(size: isCompact ? 28 : 34, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.onPrimary)
                 }
 
             VStack(alignment: .leading, spacing: 7) {
                 Text("Admin User")
-                    .font(.system(size: isCompact ? 26 : 32, weight: .light))
-                    .foregroundColor(.gray900)
+                    .font(.system(size: isCompact ? 24 : 28, weight: .medium))
+                    .foregroundStyle(Color.ink)
 
                 Text("Jewel India Administration")
                     .font(.system(size: 15))
-                    .foregroundColor(.gray600)
+                    .foregroundStyle(Color.inkMuted)
 
                 Label("Active session", systemImage: "checkmark.circle.fill")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.gray700)
+                    .foregroundStyle(Color.success)
             }
 
             Spacer(minLength: 0)
         }
         .padding(isCompact ? 22 : 28)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular.tint(.white.opacity(0.35)), in: RoundedRectangle(cornerRadius: 16))
+        .webCard()
     }
 
     private var sessionCard: some View {
         ProfileSectionCard(title: "Account & Access", icon: "person.badge.key.fill") {
             ProfileInfoRow(label: "Account", value: "Shared admin")
-            Divider().overlay(Color.gray100)
+            Divider().overlay(Color.hairlineSoft)
             ProfileInfoRow(label: "Role", value: "Administrator")
-            Divider().overlay(Color.gray100)
+            Divider().overlay(Color.hairlineSoft)
             ProfileInfoRow(label: "Authentication", value: "Session password")
         }
     }
@@ -149,9 +147,9 @@ struct AdminProfileView: View {
     private var appInformationCard: some View {
         ProfileSectionCard(title: "App Information", icon: "iphone") {
             ProfileInfoRow(label: "Application", value: "Jewel India Admin")
-            Divider().overlay(Color.gray100)
+            Divider().overlay(Color.hairlineSoft)
             ProfileInfoRow(label: "Version", value: appVersion)
-            Divider().overlay(Color.gray100)
+            Divider().overlay(Color.hairlineSoft)
             ProfileInfoRow(label: "Build", value: buildNumber)
         }
     }
@@ -160,26 +158,26 @@ struct AdminProfileView: View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: "exclamationmark.shield.fill")
                 .font(.system(size: 22))
-                .foregroundColor(.yellow900)
+                .foregroundStyle(Color.warning)
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("Security upgrade pending")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.gray900)
+                    .foregroundStyle(Color.ink)
 
                 Text("This app currently uses one shared admin session. Individual admin identities, roles and multi-factor authentication will appear here after the account system is connected.")
                     .font(.system(size: 14))
-                    .foregroundColor(.gray700)
+                    .foregroundStyle(Color.inkMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer(minLength: 0)
         }
         .padding(20)
-        .background(Color.yellow100, in: RoundedRectangle(cornerRadius: 14))
+        .background(Color.warningBg, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.yellow900.opacity(0.14), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.warning.opacity(0.2), lineWidth: 1)
         }
     }
 
@@ -188,11 +186,15 @@ struct AdminProfileView: View {
             showingLogoutConfirmation = true
         } label: {
             Label("Log Out", systemImage: "rectangle.portrait.and.arrow.right")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 15)
-                .background(Color.red500, in: RoundedRectangle(cornerRadius: 12))
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(Color.danger)
+                .frame(maxWidth: .infinity, minHeight: 50)
+                .background(Color.surface1, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.hairline, lineWidth: 1)
+                }
+                .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityHint("Returns to the admin login screen")
@@ -214,7 +216,7 @@ private struct ProfileSectionCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 18) {
             Label(title, systemImage: icon)
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.gray900)
+                .foregroundStyle(Color.ink)
 
             VStack(spacing: 14) {
                 content
@@ -234,13 +236,13 @@ private struct ProfileInfoRow: View {
         HStack(alignment: .firstTextBaseline, spacing: 16) {
             Text(label)
                 .font(.system(size: 14))
-                .foregroundColor(.gray600)
+                .foregroundStyle(Color.inkMuted)
 
             Spacer(minLength: 12)
 
             Text(value)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.gray900)
+                .foregroundStyle(Color.ink)
                 .multilineTextAlignment(.trailing)
         }
     }

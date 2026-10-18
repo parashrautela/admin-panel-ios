@@ -29,14 +29,14 @@ struct ToastView: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: toast.isError ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
-                .foregroundColor(toast.isError ? .red500 : .gray900)
+                .foregroundColor(toast.isError ? Color(hex: 0xFF8A8A) : .onPrimary)
             Text(toast.text)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.gray900)
+                .foregroundColor(.onPrimary)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 13)
-        .glassEffect(.regular, in: Capsule())
+        .background(Capsule().fill(Color.ink))
         .padding(.bottom, 28)
     }
 }

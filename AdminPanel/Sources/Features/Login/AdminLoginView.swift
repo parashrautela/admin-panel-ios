@@ -1,8 +1,9 @@
 import SwiftUI
 
-// Split login screen from the 2026-09-10 Figma redesign: a brand
-// illustration beside a dark navy panel on regular width, illustration
-// dropped on compact width (no room for a side-by-side split on iPhone).
+// Login screen in the light Intercom style. Regular width shows the brand
+// illustration beside the form inside one floating white card on the cream
+// canvas; compact width drops the illustration and sits the form directly on
+// the canvas (no room for a side-by-side split on iPhone).
 struct AdminLoginView: View {
     @EnvironmentObject private var auth: AdminAuth
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -14,32 +15,39 @@ struct AdminLoginView: View {
 
     private var isCompact: Bool { horizontalSizeClass == .compact }
 
+    private var cardShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: isCompact ? 0 : 12, style: .continuous)
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             if !isCompact {
                 illustrationPanel
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Rectangle()
+                    .fill(Color.hairline)
+                    .frame(width: 1)
             }
             formPanel
                 .frame(maxWidth: isCompact ? .infinity : 460, maxHeight: .infinity)
         }
-        .clipShape(
-            UnevenRoundedRectangle(
-                topLeadingRadius: isCompact ? 0 : 28,
-                bottomLeadingRadius: isCompact ? 0 : 28,
-                bottomTrailingRadius: isCompact ? 0 : 28,
-                topTrailingRadius: isCompact ? 0 : 28
-            )
-        )
+        .background(isCompact ? Color.canvas : Color.surface1)
+        .clipShape(cardShape)
+        .overlay {
+            if !isCompact {
+                cardShape.stroke(Color.hairline, lineWidth: 1)
+            }
+        }
         .padding(isCompact ? 0 : 16)
-        .background(Color.gray50)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.canvas)
         .ignoresSafeArea()
     }
 
     // MARK: - Illustration side (regular width only)
 
     private var illustrationPanel: some View {
-        Color.white
+        Color.surface1
             .overlay(
                 Image("LoginIllustration")
                     .resizable()
@@ -54,27 +62,19 @@ struct AdminLoginView: View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: 32)
 
-            VStack(spacing: 6) {
-                Text("Jewel India")
-                    .font(.system(size: 30, weight: .regular, design: .serif))
-                    .foregroundColor(.white)
-                Text("Made for Moments That Matter")
-                    .font(.system(size: 13))
-                    .tracking(0.5)
-                    .foregroundColor(.loginMutedText)
-            }
-            .frame(maxWidth: .infinity)
+            brandBlock
+                .padding(.horizontal, 32)
 
             Spacer(minLength: 40)
 
             VStack(alignment: .leading, spacing: 28) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Welcome back")
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(.white)
+                    Text("Admin Login")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(.ink)
                     Text("Enter password to access the admin panel")
                         .font(.system(size: 15))
-                        .foregroundColor(.loginMutedText)
+                        .foregroundColor(.inkMuted)
                 }
 
                 VStack(alignment: .leading, spacing: 14) {
@@ -83,7 +83,7 @@ struct AdminLoginView: View {
                     if !error.isEmpty {
                         Text(error)
                             .font(.system(size: 14))
-                            .foregroundColor(.red500)
+                            .foregroundColor(.danger)
                     }
 
                     loginButton
@@ -97,13 +97,35 @@ struct AdminLoginView: View {
                 .padding(.horizontal, 32)
                 .padding(.bottom, 28)
         }
-        .background(
-            LinearGradient(
-                colors: [.loginNavyTop, .loginNavyBottom],
-                startPoint: .top,
-                endPoint: .bottom
+    }
+
+    // MARK: - Brand mark
+
+    private var brandBlock: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            brandMark
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Jewel India")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.ink)
+                Text("Made for Moments That Matter")
+                    .font(.system(size: 13))
+                    .foregroundColor(.inkMuted)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var brandMark: some View {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(Color.ink)
+            .frame(width: 40, height: 40)
+            .overlay(
+                Text("JI")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.onPrimary)
             )
-        )
+            .accessibilityHidden(true)
     }
 
     // MARK: - Terms, privacy, support
@@ -116,9 +138,9 @@ struct AdminLoginView: View {
             Text(support)
         }
         .font(.system(size: 13))
-        .foregroundColor(.loginMutedText)
+        .foregroundColor(.inkMuted)
         // Links take the tint, not the run's own colour.
-        .tint(.white)
+        .tint(.ink)
         .lineSpacing(4)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -162,6 +184,7 @@ struct AdminLoginView: View {
                     SecureField("Enter Password", text: $password)
                 }
             }
+            .foregroundColor(.ink)
             .textContentType(.password)
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
@@ -171,25 +194,29 @@ struct AdminLoginView: View {
                 isPasswordVisible.toggle()
             } label: {
                 Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
-                    .foregroundColor(.gray500)
+                    .foregroundColor(.inkSubtle)
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 16)
-        .background(Color.white, in: RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(Color.surface1, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.hairline, lineWidth: 1)
+        )
     }
 
     private var loginButton: some View {
         Button(action: handleLogin) {
             Text(isLoggingIn ? "Checking..." : "Login")
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(.onPrimary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, 15)
         }
         .buttonStyle(.plain)
-        .background(Color.loginButtonFill, in: RoundedRectangle(cornerRadius: 14))
+        .background(Color.ink, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .opacity(isLoggingIn || password.isEmpty ? 0.55 : 1)
         .disabled(isLoggingIn || password.isEmpty)
     }
